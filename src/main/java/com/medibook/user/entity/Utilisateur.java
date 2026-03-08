@@ -3,8 +3,6 @@ package com.medibook.user.entity;
 import com.medibook.planning.entity.TemplateSemaine;
 import com.medibook.common.enums.Role;
 import com.medibook.common.enums.Status;
-
-
 import com.medibook.cabinet.entity.Cabinet;
 import com.medibook.rendezvous.entity.RendezVous;
 import com.medibook.specialite.entity.Specialite;
@@ -52,7 +50,7 @@ public class Utilisateur {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cabinet_id")
-    private Cabinet cabinet; // null pour patient
+    private Cabinet cabinet; // null pour patient ou super_admin
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "specialite_id")
@@ -66,7 +64,4 @@ public class Utilisateur {
 
     @OneToMany(mappedBy = "patient", fetch = FetchType.LAZY)
     private Set<RendezVous> rendezVousPatient;
-
-
-
 }

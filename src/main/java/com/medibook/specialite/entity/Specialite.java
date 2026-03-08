@@ -10,9 +10,7 @@ import java.util.Set;
 @Entity
 @Table(
         name = "specialites",
-        uniqueConstraints = {
-                @UniqueConstraint(columnNames = {"nom", "cabinet_id"})
-        }
+        uniqueConstraints = @UniqueConstraint(columnNames = {"nom", "cabinet_id"})
 )
 @Getter
 @Setter
@@ -32,16 +30,10 @@ public class Specialite {
 
     private String description;
 
-    /**
-     * Chaque spécialité appartient à un cabinet
-     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cabinet_id", nullable = false)
     private Cabinet cabinet;
 
-    /**
-     * Médecins ayant cette spécialité
-     */
     @OneToMany(mappedBy = "specialite", fetch = FetchType.LAZY)
     private Set<Utilisateur> medecins;
 }

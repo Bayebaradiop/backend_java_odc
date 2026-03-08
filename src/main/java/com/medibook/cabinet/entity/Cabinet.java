@@ -40,17 +40,12 @@ public class Cabinet {
     private String email;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Status status = Status.ACTIF;
 
-    /**
-     * Utilisateurs du cabinet
-     */
     @OneToMany(mappedBy = "cabinet", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<Utilisateur> utilisateurs;
 
-    /**
-     * Spécialités disponibles dans le cabinet
-     */
     @OneToMany(mappedBy = "cabinet", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<Specialite> specialites;
 

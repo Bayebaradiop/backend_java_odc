@@ -9,7 +9,9 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Entity
-@Table(name = "creneaux")
+@Table(name = "creneaux", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"medecin_id", "date", "heure_debut"})
+})
 @Getter
 @Setter
 @Builder
@@ -36,8 +38,7 @@ public class Creneau {
     @Column(name = "heure_fin", nullable = false)
     private LocalTime heureFin;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "rendez_vous_id")
+    @OneToOne(fetch = FetchType.LAZY, mappedBy = "creneau", cascade = CascadeType.ALL)
     private RendezVous rendezVous;
 
     @Column(nullable = false)

@@ -10,7 +10,9 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Entity
-@Table(name = "rendez_vous")
+@Table(name = "rendez_vous", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"creneau_id"})
+})
 @Data
 @Builder
 @NoArgsConstructor
@@ -35,7 +37,7 @@ public class RendezVous {
     @JoinColumn(name = "cabinet_id", nullable = false)
     private Cabinet cabinet;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creneau_id", nullable = false)
     private Creneau creneau;
 
