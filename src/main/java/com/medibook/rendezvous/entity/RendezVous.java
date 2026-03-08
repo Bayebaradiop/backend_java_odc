@@ -2,6 +2,7 @@ package com.medibook.rendezvous.entity;
 
 import com.medibook.cabinet.entity.Cabinet;
 import com.medibook.common.enums.StatutRdv;
+import com.medibook.creneau.entity.Creneau;
 import com.medibook.user.entity.Utilisateur;
 import jakarta.persistence.*;
 import lombok.*;
@@ -34,11 +35,9 @@ public class RendezVous {
     @JoinColumn(name = "cabinet_id", nullable = false)
     private Cabinet cabinet;
 
-    @Column(nullable = false)
-    private LocalDate date;
-
-    @Column(nullable = false)
-    private LocalTime heure;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "creneau_id", nullable = false)
+    private Creneau creneau;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

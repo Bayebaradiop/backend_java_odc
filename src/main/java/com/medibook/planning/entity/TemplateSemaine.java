@@ -1,4 +1,4 @@
-package com.medibook.cabinet.entity;
+package com.medibook.planning.entity;
 
 import com.medibook.common.enums.JourSemaine;
 import com.medibook.user.entity.Utilisateur;

@@ -1,6 +1,6 @@
 package com.medibook.user.entity;
 
-import com.medibook.cabinet.entity.TemplateSemaine;
+import com.medibook.planning.entity.TemplateSemaine;
 import com.medibook.common.enums.Role;
 import com.medibook.common.enums.Status;
 
@@ -13,7 +13,7 @@ import lombok.*;
 import java.util.Set;
 
 @Entity
-@Table(name = "utilisateur")
+@Table(name = "utilisateurs")
 @Data
 @Builder
 @NoArgsConstructor

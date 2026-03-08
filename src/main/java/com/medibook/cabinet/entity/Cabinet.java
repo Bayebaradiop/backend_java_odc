@@ -1,13 +1,16 @@
 package com.medibook.cabinet.entity;
 
 import com.medibook.user.entity.Utilisateur;
+import com.medibook.specialite.entity.Specialite;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.util.Set;
 
 @Entity
 @Table(name = "cabinets")
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -39,13 +42,20 @@ public class Cabinet {
     @Enumerated(EnumType.STRING)
     private Status status = Status.ACTIF;
 
+    /**
+     * Utilisateurs du cabinet
+     */
     @OneToMany(mappedBy = "cabinet", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Set<Utilisateur> utilisateurs;
+
+    /**
+     * Spécialités disponibles dans le cabinet
+     */
+    @OneToMany(mappedBy = "cabinet", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Set<Specialite> specialites;
 
     public enum Status {
         ACTIF,
         INACTIF
     }
 }
-
-
