@@ -1,4 +1,4 @@
 package com.medibook.common.config;
 
-public class SwaggerConfig {
+public class CorsConfig {
 }

@@ -4,6 +4,23 @@ spring:
   profiles:
     active: dev
 
+  # Base de données
+  datasource:
+    url: jdbc:postgresql://localhost:5432/medibook
+    username: postgres
+    password: passer
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
 server:
   port: 8080
 
