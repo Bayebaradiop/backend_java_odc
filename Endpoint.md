@@ -1,18 +1,28 @@
 ## 📡 ENDPOINTS API - MEDIBOOK SaaS
 
+## 📦 Entités du projet
+│  Utilisateur  → Table: utilisateurs  (Role: MEDICIN, PATIENT, SECRETAIRE, ADMIN)
+│  Cabinet      → Table: cabinets      (Status: ACTIF, INACTIF)
+│  Specialite   → Table: specialites   (unique par nom + cabinet_id)
+│  TemplateSemaine → Table: template_semaine (planning hebdomadaire médecin)
+│  Creneau      → Table: creneaux      (créneaux concrets avec date + disponible)
+│  RendezVous   → Table: rendez_vous   (StatutRdv: EN_ATTENTE, CONFIRME, ANNULE, TERMINE)
+│  ExceptionsPlanning → Table: exceptions_planning (TypeException: ABSENT, FERME, VACANCES)
+│  Status utilisateur: ACTIF, INACTIF, SUSPENDED, DELETED
+
 ┌────────────────────────────────────────────────────────────────────────────┐
-│  🔴 SUPER_ADMIN ENDPOINTS                                                  │
+│  🔴 SUPER_ADMIN ENDPOINTS  (SuperAdminController, SuperAdminStatsController)│
 │  Mission: Gérer la plateforme et les cabinets                              │
 ├────────────────────────────────────────────────────────────────────────────┤
 │                                                                            │
-│  🔐 Authentification                                                       │
+│  🔐 Authentification (AuthController, PasswordResetController)             │
 │  ─────────────────────────────────────────────────────────────────────     │
 │  (POST)   /api/auth/login                         (Connexion)              │
 │  (POST)   /api/auth/logout                        (Déconnexion)            │
 │  (GET)    /api/auth/profile                       (Mon profil)             │
 │  (PUT)    /api/auth/profile                       (Modifier mon profil)    │
 │                                                                            │
-│  🏥 Gestion des Cabinets                                                   │
+│  🏥 Gestion des Cabinets (CabinetController)                               │
 │  ─────────────────────────────────────────────────────────────────────     │
 │  (GET)    /api/super-admin/cabinets               (Lister les cabinets)    │
 │  (POST)   /api/super-admin/cabinets               (Créer un cabinet)       │
@@ -21,7 +31,7 @@
 │  (DELETE) /api/super-admin/cabinets/{id}          (Supprimer un cabinet)   │
 │  (PATCH)  /api/super-admin/cabinets/{id}/status   (Activer/Désactiver)     │
 │                                                                            │
-│  👥 Gestion des Admins                                                     │
+│  👥 Gestion des Admins (SuperAdminController)                              │
 │  ─────────────────────────────────────────────────────────────────────     │
 │  (GET)    /api/super-admin/admins                 (Lister les admins)      │
 │  (POST)   /api/super-admin/admins                 (Créer un admin)         │
@@ -35,7 +45,7 @@
 │  (GET)    /api/super-admin/users                  (Tous les utilisateurs)  │
 │  (PATCH)  /api/super-admin/users/{id}/status      (Bloquer/Débloquer)      │
 │                                                                            │
-│  📊 Statistiques                                                           │
+│  📊 Statistiques (SuperAdminStatsController)                               │
 │  ─────────────────────────────────────────────────────────────────────     │
 │  (GET)    /api/super-admin/stats                  (Statistiques globales)  │
 │  (GET)    /api/super-admin/stats/cabinets         (Stats par cabinet)      │
@@ -45,22 +55,22 @@
 
 
 ┌────────────────────────────────────────────────────────────────────────────┐
-│  🟠 ADMIN ENDPOINTS                                                        │
+│  🟠 ADMIN ENDPOINTS  (AdminController, AdminStatsController)               │
 ├────────────────────────────────────────────────────────────────────────────┤
 │                                                                            │
-│  🔐 Authentification                                                       │
+│  🔐 Authentification (AuthController)                                      │
 │  ─────────────────────────────────────────────────────────────────────     │
 │  (POST)   /api/auth/login                         (Connexion)              │
 │  (POST)   /api/auth/logout                        (Déconnexion)            │
 │  (GET)    /api/auth/profile                       (Mon profil)             │
 │  (PUT)    /api/auth/profile                       (Modifier mon profil)    │
 │                                                                            │
-│  🏥 Mon Cabinet                                                            │
+│  🏥 Mon Cabinet (CabinetController)                                        │
 │  ─────────────────────────────────────────────────────────────────────     │
 │  (GET)    /api/admin/cabinet                      (Voir mon cabinet)       │
 │  (PUT)    /api/admin/cabinet                      (Modifier mon cabinet)   │
 │                                                                            │
-│  🩺 Gestion des Spécialités du Cabinet                                     │
+│  🩺 Gestion des Spécialités (SpecialiteController)                         │
 │  ─────────────────────────────────────────────────────────────────────     │
 │  (GET)    /api/admin/specialites                  (Lister les spécialités) │
 │  (POST)   /api/admin/specialites                  (Créer une spécialité)   │
@@ -68,7 +78,7 @@
 │  (PUT)    /api/admin/specialites/{id}             (Modifier une spécialité)│
 │  (DELETE) /api/admin/specialites/{id}             (Supprimer une spécial.) │
 │                                                                            │
-│  👨‍⚕️ Gestion des Médecins                                                   │
+│  👨‍⚕️ Gestion des Médecins (AdminController)                                 │
 │  ─────────────────────────────────────────────────────────────────────     │
 │  (GET)    /api/admin/medecins                     (Lister mes médecins)    │
 │  (POST)   /api/admin/medecins                     (Recruter un médecin)    │
@@ -77,7 +87,7 @@
 │  (DELETE) /api/admin/medecins/{id}                (Supprimer un médecin)   │
 │  (PATCH)  /api/admin/medecins/{id}/status         (Bloquer/Débloquer)      │
 │                                                                            │
-│  👩‍💼 Gestion des Secrétaires                                                │
+│  👩‍💼 Gestion des Secrétaires (AdminController)                              │
 │  ─────────────────────────────────────────────────────────────────────     │
 │  (GET)    /api/admin/secretaires                  (Lister mes secrétaires) │
 │  (POST)   /api/admin/secretaires                  (Recruter secrétaire)    │
@@ -86,7 +96,7 @@
 │  (DELETE) /api/admin/secretaires/{id}             (Supprimer secrétaire)   │
 │  (PATCH)  /api/admin/secretaires/{id}/status      (Bloquer/Débloquer)      │
 │                                                                            │
-│  📊 Statistiques                                                           │
+│  📊 Statistiques (AdminStatsController)                                    │
 │  ─────────────────────────────────────────────────────────────────────     │
 │  (GET)    /api/admin/stats                        (Stats du cabinet)       │
 │  (GET)    /api/admin/stats/rdv                    (Stats des RDV)          │
@@ -94,7 +104,7 @@
 │                                                                            │
 │  👁️ Vue d'ensemble (lecture seule)                                         │
 │  ─────────────────────────────────────────────────────────────────────     │
-│  (GET)    /api/admin/plannings                    (Tous les plannings)     │
+│  (GET)    /api/admin/templates-semaine            (Tous les plannings)     │
 │  (GET)    /api/admin/rdv                          (Tous les RDV)           │
 │                                                                            │
 └────────────────────────────────────────────────────────────────────────────┘
@@ -102,9 +112,11 @@
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │  🟢 SECRETAIRE ENDPOINTS                                                   │
+│  (SecretairePlanningController, SecretaireCreneauController,               │
+│   SecretaireRdvController)                                                 │
 ├────────────────────────────────────────────────────────────────────────────┤
 │                                                                            │
-│  🔐 Authentification                                                       │
+│  🔐 Authentification (AuthController)                                      │
 │  ─────────────────────────────────────────────────────────────────────     │
 │  (POST)   /api/auth/login                         (Connexion)              │
 │  (POST)   /api/auth/logout                        (Déconnexion)            │
@@ -120,33 +132,55 @@
 │  ─────────────────────────────────────────────────────────────────────     │
 │  (GET)    /api/secretaire/specialites             (Lister les spécialités) │
 │                                                                            │
-│  📅 Gestion des Plannings                                                  │
+│  📅 Gestion des Templates Semaine (SecretairePlanningController)           │
 │  ─────────────────────────────────────────────────────────────────────     │
-│  (GET)    /api/secretaire/plannings               (Tous les plannings)     │
-│  (POST)   /api/secretaire/plannings               (Créer un planning)      │
-│  (GET)    /api/secretaire/plannings/{id}          (Voir un planning)       │
-│  (PUT)    /api/secretaire/plannings/{id}          (Modifier un planning)   │
-│  (DELETE) /api/secretaire/plannings/{id}          (Supprimer un planning)  │
-│  (GET)    /api/secretaire/plannings/medecin/{id}  (Plannings d'un médecin) │
-│                                                                            │
-│  🕐 Gestion des Créneaux                                                   │
+│  Entité: TemplateSemaine (medecin, jourSemaine, heureDebut, heureFin,     │
+│          dureeCreneau en minutes)                                          │
 │  ─────────────────────────────────────────────────────────────────────     │
-│  (GET)    /api/secretaire/creneaux                (Tous les créneaux)      │
-│  (POST)   /api/secretaire/creneaux                (Créer un créneau)       │
-│  (PUT)    /api/secretaire/creneaux/{id}           (Modifier un créneau)    │
-│  (DELETE) /api/secretaire/creneaux/{id}           (Supprimer un créneau)   │
-│  (GET)    /api/secretaire/creneaux/planning/{id}  (Créneaux d'un planning) │
+│  (GET)    /api/secretaire/templates-semaine                (Tous les templates)     │
+│  (POST)   /api/secretaire/templates-semaine                (Créer un template)      │
+│  (GET)    /api/secretaire/templates-semaine/{id}           (Voir un template)       │
+│  (PUT)    /api/secretaire/templates-semaine/{id}           (Modifier un template)   │
+│  (DELETE) /api/secretaire/templates-semaine/{id}           (Supprimer un template)  │
+│  (GET)    /api/secretaire/templates-semaine/medecin/{id}   (Templates d'un médecin) │
 │                                                                            │
-│  📋 Gestion des Rendez-vous                                                │
+│  🚫 Gestion des Exceptions Planning                                        │
+│  ─────────────────────────────────────────────────────────────────────     │
+│  Entité: ExceptionsPlanning (medecin, date, type: ABSENT/FERME/VACANCES)  │
+│  ─────────────────────────────────────────────────────────────────────     │
+│  (GET)    /api/secretaire/exceptions-planning              (Toutes les exceptions)  │
+│  (POST)   /api/secretaire/exceptions-planning              (Créer une exception)    │
+│  (GET)    /api/secretaire/exceptions-planning/{id}         (Voir une exception)     │
+│  (PUT)    /api/secretaire/exceptions-planning/{id}         (Modifier une exception) │
+│  (DELETE) /api/secretaire/exceptions-planning/{id}         (Supprimer une exception)│
+│  (GET)    /api/secretaire/exceptions-planning/medecin/{id} (Exceptions d'un médecin)│
+│                                                                            │
+│  🕐 Gestion des Créneaux (SecretaireCreneauController)                     │
+│  ─────────────────────────────────────────────────────────────────────     │
+│  Entité: Creneau (medecin, date, heureDebut, heureFin, disponible)        │
+│  ─────────────────────────────────────────────────────────────────────     │
+│  (GET)    /api/secretaire/creneaux                         (Tous les créneaux)      │
+│  (POST)   /api/secretaire/creneaux/generer                 (Générer créneaux depuis │
+│           template semaine pour une période donnée)                         │
+│  (GET)    /api/secretaire/creneaux/{id}                    (Voir un créneau)        │
+│  (PUT)    /api/secretaire/creneaux/{id}                    (Modifier un créneau)    │
+│  (DELETE) /api/secretaire/creneaux/{id}                    (Supprimer un créneau)   │
+│  (GET)    /api/secretaire/creneaux/medecin/{id}            (Créneaux d'un médecin)  │
+│  (GET)    /api/secretaire/creneaux/medecin/{id}?date={date}(Créneaux par date)      │
+│                                                                            │
+│  📋 Gestion des Rendez-vous (SecretaireRdvController)                      │
+│  ─────────────────────────────────────────────────────────────────────     │
+│  Entité: RendezVous (patient, medecin, cabinet, creneau, statut, motif)   │
+│  Statuts: EN_ATTENTE → CONFIRME / ANNULE → TERMINE                        │
 │  ─────────────────────────────────────────────────────────────────────     │
 │  (GET)    /api/secretaire/rdv                     (Tous les RDV)           │
 │  (GET)    /api/secretaire/rdv/en-attente          (RDV en attente)         │
 │  (GET)    /api/secretaire/rdv/confirmes           (RDV confirmés)          │
 │  (GET)    /api/secretaire/rdv/{id}                (Voir un RDV)            │
 │  (POST)   /api/secretaire/rdv                     (Prendre RDV pour patient)│
-│  (PATCH)  /api/secretaire/rdv/{id}/valider        (Valider un RDV)         │
-│  (PATCH)  /api/secretaire/rdv/{id}/refuser        (Refuser un RDV)         │
+│  (PATCH)  /api/secretaire/rdv/{id}/confirmer      (Confirmer un RDV)       │
 │  (PATCH)  /api/secretaire/rdv/{id}/annuler        (Annuler un RDV)         │
+│  (PATCH)  /api/secretaire/rdv/{id}/terminer       (Marquer RDV terminé)    │
 │  (GET)    /api/secretaire/rdv/medecin/{id}        (RDV d'un médecin)       │
 │                                                                            │
 │  👥 Patients                                                               │
@@ -160,23 +194,29 @@
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │  🔵 MEDECIN ENDPOINTS                                                      │
+│  (MedecinPlanningController, MedecinRdvController, MedecinStatsController) │
 ├────────────────────────────────────────────────────────────────────────────┤
 │                                                                            │
-│  🔐 Authentification                                                       │
+│  🔐 Authentification (AuthController)                                      │
 │  ─────────────────────────────────────────────────────────────────────     │
 │  (POST)   /api/auth/login                         (Connexion)              │
 │  (POST)   /api/auth/logout                        (Déconnexion)            │
 │  (GET)    /api/auth/profile                       (Mon profil)             │
 │  (PUT)    /api/auth/profile                       (Modifier mon profil)    │
 │                                                                            │
-│  📅 Mon Planning (lecture seule)                                           │
+│  📅 Mon Planning (MedecinPlanningController - lecture seule)               │
 │  ─────────────────────────────────────────────────────────────────────     │
-│  (GET)    /api/medecin/planning                   (Mon planning complet)   │
-│  (GET)    /api/medecin/planning/today             (Planning du jour)       │
-│  (GET)    /api/medecin/planning/semaine           (Planning de la semaine) │
-│  (GET)    /api/medecin/planning/{date}            (Planning d'une date)    │
+│  (GET)    /api/medecin/templates-semaine          (Mes templates semaine)  │
+│  (GET)    /api/medecin/creneaux                   (Tous mes créneaux)      │
+│  (GET)    /api/medecin/creneaux/today             (Créneaux du jour)       │
+│  (GET)    /api/medecin/creneaux/semaine           (Créneaux de la semaine) │
+│  (GET)    /api/medecin/creneaux?date={date}       (Créneaux d'une date)    │
 │                                                                            │
-│  📋 Mes Rendez-vous (lecture seule)                                        │
+│  🚫 Mes Exceptions Planning (lecture seule)                                │
+│  ─────────────────────────────────────────────────────────────────────     │
+│  (GET)    /api/medecin/exceptions-planning        (Mes exceptions)         │
+│                                                                            │
+│  📋 Mes Rendez-vous (MedecinRdvController - lecture seule)                 │
 │  ─────────────────────────────────────────────────────────────────────     │
 │  (GET)    /api/medecin/rdv                        (Tous mes RDV)           │
 │  (GET)    /api/medecin/rdv/confirmes              (Mes RDV confirmés)      │
@@ -188,7 +228,7 @@
 │  (GET)    /api/medecin/patients                   (Mes patients)           │
 │  (GET)    /api/medecin/patients/{id}              (Infos d'un patient)     │
 │                                                                            │
-│  📊 Mes Statistiques                                                       │
+│  📊 Mes Statistiques (MedecinStatsController)                              │
 │  ─────────────────────────────────────────────────────────────────────     │
 │  (GET)    /api/medecin/stats                      (Mes statistiques)       │
 │                                                                            │
@@ -197,9 +237,10 @@
 
 ┌────────────────────────────────────────────────────────────────────────────┐
 │  🟡 PATIENT ENDPOINTS                                                      │
+│  (PatientRdvController, PatientDispoController)                            │
 ├────────────────────────────────────────────────────────────────────────────┤
 │                                                                            │
-│  🔐 Authentification                                                       │
+│  🔐 Authentification (AuthController, PasswordResetController)             │
 │  ─────────────────────────────────────────────────────────────────────     │
 │  (POST)   /api/auth/register                      (Inscription)            │
 │  (POST)   /api/auth/login                         (Connexion)              │
@@ -220,12 +261,16 @@
 │  (GET)    /api/patient/medecins?cabinet_id={id}    (Par cabinet)           │
 │  (GET)    /api/patient/medecins/{id}              (Détails d'un médecin)   │
 │                                                                            │
-│  📅 Disponibilités                                                         │
+│  📅 Disponibilités (PatientDispoController)                                │
+│  ─────────────────────────────────────────────────────────────────────     │
+│  Entité: Creneau (filtre disponible=true, pas d'exception ce jour)        │
 │  ─────────────────────────────────────────────────────────────────────     │
 │  (GET)    /api/patient/medecins/{id}/disponibilites        (Créneaux dispo)│
 │  (GET)    /api/patient/medecins/{id}/disponibilites?date={date} (Par date) │
 │                                                                            │
-│  📋 Mes Rendez-vous                                                        │
+│  📋 Mes Rendez-vous (PatientRdvController)                                 │
+│  ─────────────────────────────────────────────────────────────────────     │
+│  Entité: RendezVous (statut: EN_ATTENTE → CONFIRME / ANNULE → TERMINE)    │
 │  ─────────────────────────────────────────────────────────────────────     │
 │  (GET)    /api/patient/rdv                        (Mes RDV)                │
 │  (GET)    /api/patient/rdv/en-attente             (Mes RDV en attente)     │

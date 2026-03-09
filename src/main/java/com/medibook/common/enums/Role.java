@@ -1,8 +1,9 @@
 package com.medibook.common.enums;
 
 public enum Role {
-    MEDICIN,
-    PATIENT,
+    SUPER_ADMIN,
+    ADMIN,
     SECRETAIRE,
-    ADMIN
+    MEDECIN,
+    PATIENT
 }

@@ -1,14 +1,34 @@
 package com.medibook.user.entity;
 
-import com.medibook.planning.entity.TemplateSemaine;
+import java.util.Set;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import com.medibook.cabinet.entity.Cabinet;
 import com.medibook.common.enums.Role;
 import com.medibook.common.enums.Status;
-import com.medibook.cabinet.entity.Cabinet;
+import com.medibook.planning.entity.TemplateSemaine;
 import com.medibook.rendezvous.entity.RendezVous;
 import com.medibook.specialite.entity.Specialite;
-import jakarta.persistence.*;
-import lombok.*;
-import java.util.Set;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "utilisateurs")
@@ -42,10 +62,13 @@ public class Utilisateur {
     private String photo;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(nullable = false)
     private Role role;
 
     @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Builder.Default
     private Status status = Status.ACTIF;
 
     @ManyToOne(fetch = FetchType.LAZY)
