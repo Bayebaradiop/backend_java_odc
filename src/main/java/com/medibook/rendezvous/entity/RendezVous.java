@@ -1,13 +1,14 @@
 package com.medibook.rendezvous.entity;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import com.medibook.cabinet.entity.Cabinet;
 import com.medibook.common.enums.StatutRdv;
 import com.medibook.creneau.entity.Creneau;
 import com.medibook.user.entity.Utilisateur;
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDate;
-import java.time.LocalTime;
 
 @Entity
 @Table(name = "rendez_vous", uniqueConstraints = {
@@ -38,11 +39,12 @@ public class RendezVous {
     private Cabinet cabinet;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "creneau_id", nullable = false)
+    @JoinColumn(name = "creneau_id", nullable = true)
     private Creneau creneau;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(nullable = false, columnDefinition = "statusRdv")
     private StatutRdv statut = StatutRdv.EN_ATTENTE;
 
     private String motif;

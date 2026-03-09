@@ -1,5 +1,8 @@
 package com.medibook.cabinet.entity;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import com.medibook.user.entity.Utilisateur;
 import com.medibook.specialite.entity.Specialite;
 import jakarta.persistence.*;
@@ -40,7 +43,8 @@ public class Cabinet {
     private String email;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(nullable = false, columnDefinition = "statut_enum")
     private Status status = Status.ACTIF;
 
     @OneToMany(mappedBy = "cabinet", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
