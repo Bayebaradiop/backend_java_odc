@@ -1,4 +1,13 @@
 package com.medibook.specialite.dto;
 
-public class SpecialiteResponse {
-}
+import lombok.Builder;
+
+@Builder
+public record SpecialiteResponse(
+    Long id,
+    String nom,
+    String description,
+    Long cabinetId,
+    String cabinetNom
+) {}
+
