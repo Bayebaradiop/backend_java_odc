@@ -31,8 +31,16 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Routes publiques
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/swagger-ui/**", "/api-docs/**").permitAll()
+                .requestMatchers("/swagger-ui/**").permitAll()
+                .requestMatchers("/swagger-ui.html").permitAll()
+                .requestMatchers("/swagger-ui/").permitAll()
+                .requestMatchers("/v3/api-docs/**").permitAll()
+                .requestMatchers("/v3/api-docs").permitAll()
+                .requestMatchers("/api-docs/**").permitAll()
+                .requestMatchers("/swagger-resources/**").permitAll()
+                .requestMatchers("/webjars/**").permitAll()
                 .requestMatchers("/error").permitAll()
+                .requestMatchers("/").permitAll()
 
                 // Routes par rôle
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")

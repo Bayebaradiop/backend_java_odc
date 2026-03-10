@@ -29,6 +29,9 @@ springdoc:
     path: /api-docs
   swagger-ui:
     path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  show-actuator: false
 
 jwt:
   secret: ${JWT_SECRET:medibook-secret-key-change-in-production}
