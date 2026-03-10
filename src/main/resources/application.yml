@@ -3,10 +3,10 @@ spring:
     name: medibook-api
   profiles:
     active: dev
-
+  
   # Base de données
   datasource:
-    url: jdbc:postgresql://localhost:5432/medibook
+    url: jdbc:postgresql://localhost:5432/medibook2
     username: postgres
     password: passer
     driver-class-name: org.postgresql.Driver
