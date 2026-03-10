@@ -43,13 +43,25 @@ public class SecurityConfig {
                 .requestMatchers("/").permitAll()
 
                 // Routes par rôle
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 .requestMatchers("/api/medecin/**").hasRole("MEDECIN")
                 .requestMatchers("/api/secretaire/**").hasRole("SECRETAIRE")
                 .requestMatchers("/api/patient/**").hasRole("PATIENT")
 
                 // Tout le reste nécessite une authentification
                 .anyRequest().authenticated()
+            )
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(401);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"error\": \"Non authentifié. Veuillez vous connecter.\"}");
+                })
+                .accessDeniedHandler((request, response, accessDeniedException) -> {
+                    response.setStatus(403);
+                    response.setContentType("application/json");
+                    response.getWriter().write("{\"error\": \"Accès refusé. Permissions insuffisantes.\"}");
+                })
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 

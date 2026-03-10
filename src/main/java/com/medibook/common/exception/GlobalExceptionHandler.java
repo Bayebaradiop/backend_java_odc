@@ -1,24 +1,102 @@
 package com.medibook.common.exception;
 
-import java.util.Map;
-
+import com.medibook.common.dto.ApiStandardResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<?> handleRuntimeException(RuntimeException ex) {
+    // ==================== Codes d'erreur ====================
+    private static final String ERR_NOT_FOUND = "ERR_NOT_FOUND";
+    private static final String ERR_UNAUTHORIZED = "ERR_UNAUTHORIZED";
+    private static final String ERR_FORBIDDEN = "ERR_FORBIDDEN";
+    private static final String ERR_VALIDATION = "ERR_VALIDATION";
+    private static final String ERR_BUSINESS = "ERR_BUSINESS";
+    private static final String ERR_FILE_TOO_LARGE = "ERR_FILE_TOO_LARGE";
+    private static final String ERR_INTERNAL = "ERR_INTERNAL";
+    private static final String ERR_MISSING_PARAM = "ERR_MISSING_PARAM";
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ApiStandardResponse<?>> handleNoResourceFoundException(NoResourceFoundException ex) {
+        log.error("Resource not found: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiStandardResponse.error("Endpoint non trouvé", ERR_NOT_FOUND));
+    }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiStandardResponse<?>> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        log.warn("Resource not found: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiStandardResponse.error(ex.getMessage(), ERR_NOT_FOUND));
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ApiStandardResponse<?>> handleUnauthorizedException(UnauthorizedException ex) {
+        log.warn("Unauthorized: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiStandardResponse.error(ex.getMessage(), ERR_FORBIDDEN));
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ApiStandardResponse<?>> handleBusinessException(BusinessException ex) {
+        log.warn("Business error: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(Map.of("error", ex.getMessage()));
+                .body(ApiStandardResponse.error(ex.getMessage(), ERR_BUSINESS));
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiStandardResponse<?>> handleMissingServletRequestParameterException(MissingServletRequestParameterException ex) {
+        log.warn("Missing parameter: {}", ex.getMessage());
+        String fieldName = ex.getParameterName();
+        String message = "Le paramètre '" + fieldName + "' est obligatoire";
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiStandardResponse.error(message, ERR_MISSING_PARAM, Map.of("parameter", fieldName)));
+    }
+
+    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiStandardResponse<?>> handleMethodArgumentNotValidException(org.springframework.web.bind.MethodArgumentNotValidException ex) {
+        log.warn("Validation error: {}", ex.getMessage());
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach(error -> 
+            errors.put(error.getField(), error.getDefaultMessage())
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiStandardResponse.error("Erreur de validation", ERR_VALIDATION, errors));
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiStandardResponse<?>> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex) {
+        log.warn("File too large: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body(ApiStandardResponse.error("Le fichier est trop volumineux (max: 10MB)", ERR_FILE_TOO_LARGE));
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ApiStandardResponse<?>> handleRuntimeException(RuntimeException ex) {
+        log.error("Runtime error: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiStandardResponse.error(ex.getMessage(), ERR_BUSINESS));
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleException(Exception ex) {
+    public ResponseEntity<ApiStandardResponse<?>> handleException(Exception ex) {
+        log.error("Internal error: {}", ex.getMessage(), ex);
+        String errorMessage = ex.getMessage();
+        if (errorMessage == null || errorMessage.isEmpty()) {
+            errorMessage = "Une erreur interne est survenue";
+        }
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", "Une erreur interne est survenue"));
+                .body(ApiStandardResponse.error(errorMessage, ERR_INTERNAL));
     }
 }
