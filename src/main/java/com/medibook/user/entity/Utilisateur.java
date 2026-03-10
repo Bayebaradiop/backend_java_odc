@@ -63,12 +63,13 @@ public class Utilisateur {
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "role_enum")
     private Role role;
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Builder.Default
+    @Column(columnDefinition = "statut_enum")
     private Status status = Status.ACTIF;
 
     @ManyToOne(fetch = FetchType.LAZY)

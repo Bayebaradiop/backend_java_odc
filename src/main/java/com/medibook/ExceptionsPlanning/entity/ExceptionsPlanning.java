@@ -1,5 +1,8 @@
 package com.medibook.ExceptionsPlanning.entity;
 
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import com.medibook.common.enums.TypeException;
 import com.medibook.user.entity.Utilisateur;
 import jakarta.persistence.*;
@@ -28,6 +31,7 @@ public class ExceptionsPlanning {
     private LocalDate date;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(nullable = false, columnDefinition = "typeException")
     private TypeException type;
 }
