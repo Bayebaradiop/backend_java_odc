@@ -7,14 +7,16 @@ import com.medibook.cabinet.mapper.CabinetMapper;
 import com.medibook.cabinet.message.MessageErreur;
 import com.medibook.cabinet.repository.CabinetRepository;
 import com.medibook.common.enums.Role;
+import com.medibook.common.enums.Status;
 import com.medibook.common.exception.BusinessException;
 import com.medibook.common.exception.ResourceNotFoundException;
 import com.medibook.common.exception.UnauthorizedException;
-import com.medibook.common.storage.StorageService;
+import com.medibook.common.storage.MediaUploadService;
 import com.medibook.user.entity.Utilisateur;
 import com.medibook.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,7 +34,8 @@ public class CabinetService {
     private final CabinetRepository cabinetRepository;
     private final CabinetMapper cabinetMapper;
     private final UserRepository userRepository;
-    private final StorageService storageService;
+    private final MediaUploadService mediaUploadService;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * Crée un nouveau cabinet avec logo optionnel
@@ -45,7 +48,45 @@ public class CabinetService {
      */
     @Transactional
     public CabinetResponseDTO createCabinet(CabinetCreateDTO dto, MultipartFile logo, Long userId) {
-        // Vérifier que l'utilisateur est un Super Admin
+        // 1. Validation Super Admin
+        Utilisateur superAdmin = validateSuperAdmin(userId);
+
+        // 2. Validation Cabinet
+        validateCabinetData(dto);
+
+        // 3. Créer le cabinet
+        Cabinet cabinet = cabinetMapper.toEntity(dto);
+        cabinet.setStatus(Cabinet.Status.ACTIF);
+        
+        // Utiliser URL logo fournie ou null (l'upload async se fait après)
+        if (dto.logoUrl() != null && !dto.logoUrl().isEmpty()) {
+            cabinet.setLogo(dto.logoUrl());
+        }
+
+        // 4. Sauvegarder le cabinet
+        Cabinet savedCabinet = cabinetRepository.save(cabinet);
+        log.info("Cabinet créé avec succès: {} par l'utilisateur {}", savedCabinet.getNom(), superAdmin.getEmail());
+
+        // 5. Upload logo de manière asynchrone (hors transaction)
+        if (logo != null && !logo.isEmpty()) {
+            String folder = "medibook/cabinets/" + savedCabinet.getId();
+            mediaUploadService.uploadImageAsync(logo, folder, url -> {
+                if (url != null) {
+                    savedCabinet.setLogo(url);
+                    cabinetRepository.save(savedCabinet);
+                    log.info("Logo uploadé pour le cabinet {}: {}", savedCabinet.getNom(), url);
+                }
+            });
+        }
+
+        // 6. Créer l'administrateur
+        return createAdminAndBuildResponse(dto, savedCabinet);
+    }
+
+    /**
+     * Valide que l'utilisateur est un Super Admin
+     */
+    private Utilisateur validateSuperAdmin(Long userId) {
         Utilisateur user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé"));
 
@@ -54,47 +95,93 @@ public class CabinetService {
                     user.getEmail(), user.getRole());
             throw new UnauthorizedException(MessageErreur.SEULEMENT_SUPER_ADMIN);
         }
+        return user;
+    }
 
-        // Vérifier si un cabinet avec le même nom existe déjà
+    /**
+     * Valide les données du cabinet
+     */
+    private void validateCabinetData(CabinetCreateDTO dto) {
         if (cabinetRepository.existsByNom(dto.nom())) {
             throw new BusinessException(MessageErreur.CABINET_DEJA_EXISTANT);
         }
 
-        // Vérifier si l'email est déjà utilisé
         if (cabinetRepository.existsByEmail(dto.email())) {
             throw new BusinessException(MessageErreur.EMAIL_DEJA_UTILISE);
         }
+    }
 
-        // Créer le cabinet
-        Cabinet cabinet = cabinetMapper.toEntity(dto);
-        cabinet.setStatus(Cabinet.Status.ACTIF);
+    /**
+     * Crée l'administrateur du cabinet et construit la réponse
+     */
+    private CabinetResponseDTO createAdminAndBuildResponse(CabinetCreateDTO dto, Cabinet savedCabinet) {
+        // Valider les données admin
+        validateAdminData(dto);
 
-        // Gérer le logo (soit fichier uploadé, soit URL fournie)
-        String logoUrl = null;
+        // Créer l'utilisateur ADMIN
+        Utilisateur admin = Utilisateur.builder()
+                .nom(dto.adminNom())
+                .prenom(dto.adminPrenom())
+                .email(dto.adminEmail())
+                .telephone(dto.adminTelephone())
+                .motDePasse(passwordEncoder.encode(dto.adminPassword()))
+                .role(Role.ADMIN)
+                .status(Status.ACTIF)
+                .cabinet(savedCabinet)
+                .build();
+
+        userRepository.save(admin);
+        log.info("Administrateur créé pour le cabinet {}: {}", savedCabinet.getNom(), admin.getEmail());
+
+        // Mapper le cabinet vers DTO avec les infos de l'admin
+        return buildResponseWithAdmin(savedCabinet, admin);
+    }
+
+    /**
+     * Construit la réponse avec les infos de l'admin
+     */
+    private CabinetResponseDTO buildResponseWithAdmin(Cabinet cabinet, Utilisateur admin) {
+        // Utiliser le mapper pour la conversion de base
+        CabinetResponseDTO response = cabinetMapper.toResponseDTO(cabinet);
         
-        // 1. Upload du fichier logo si présent
-        if (logo != null && !logo.isEmpty()) {
-            try {
-                logoUrl = storageService.uploadFile(logo.getBytes(), 
-                        dto.nom().replace(" ", "_") + "_logo", 
-                        "medibook/cabinets/logos");
-                log.info("Logo uploadé: {}", logoUrl);
-            } catch (Exception e) {
-                log.error("Erreur upload logo: {}", e.getMessage(), e);
-                throw new BusinessException(MessageErreur.ERREUR_UPLOAD_LOGO);
-            }
+        // Ajouter les infos de l'admin manuellement car le record est immutable
+        return new CabinetResponseDTO(
+                response.id(),
+                response.nom(),
+                response.logo(),
+                response.couleurPrimaire(),
+                response.couleurSecondaire(),
+                response.adresse(),
+                response.telephone(),
+                response.email(),
+                response.status(),
+                new CabinetResponseDTO.AdminInfo(
+                        admin.getId(),
+                        admin.getNom(),
+                        admin.getPrenom(),
+                        admin.getEmail(),
+                        admin.getTelephone()
+                )
+        );
+    }
+
+    /**
+     * Valide les données de l'administrateur
+     */
+    private void validateAdminData(CabinetCreateDTO dto) {
+        if (dto.adminNom() == null || dto.adminPrenom() == null || 
+            dto.adminEmail() == null || dto.adminTelephone() == null || 
+            dto.adminPassword() == null) {
+            throw new BusinessException("Les informations de l'administrateur sont incomplètes");
         }
-        // 2. Sinon utiliser l'URL logo fournie dans le DTO
-        else if (dto.logoUrl() != null && !dto.logoUrl().isEmpty()) {
-            logoUrl = dto.logoUrl();
+
+        if (userRepository.existsByEmail(dto.adminEmail())) {
+            throw new BusinessException("L'email de l'administrateur est déjà utilisé");
         }
 
-        cabinet.setLogo(logoUrl);
-
-        Cabinet savedCabinet = cabinetRepository.save(cabinet);
-        log.info("Cabinet créé avec succès: {} par l'utilisateur {}", savedCabinet.getNom(), user.getEmail());
-
-        return cabinetMapper.toResponseDTO(savedCabinet);
+        if (userRepository.existsByTelephone(dto.adminTelephone())) {
+            throw new BusinessException("Le téléphone de l'administrateur est déjà utilisé");
+        }
     }
 
     /**
@@ -118,67 +205,53 @@ public class CabinetService {
     }
 
     /**
-     * Met à jour un cabinet avec logo optionnel
+     * Met à jour un cabinet
      */
     @Transactional
     public CabinetResponseDTO updateCabinet(Long id, CabinetCreateDTO dto, MultipartFile logo, Long userId) {
-        // Vérifier que l'utilisateur est un Super Admin
-        Utilisateur user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé"));
+        // 1. Validation Super Admin
+        validateSuperAdmin(userId);
+        
+        // 2. Récupérer et valider le cabinet
+        Cabinet cabinet = findCabinetById(id);
+        
+        // 3. Valider les nouvelles données
+        validateCabinetUpdate(dto, cabinet);
+        
+        // 4. Mettre à jour le cabinet
+        cabinetMapper.updateFromDTO(dto, cabinet);
 
-        if (user.getRole() != Role.SUPER_ADMIN) {
-            throw new UnauthorizedException(MessageErreur.ACCES_INTERDIT);
+        // 5. Upload logo async si présent
+        if (logo != null && !logo.isEmpty()) {
+            String folder = "medibook/cabinets/" + cabinet.getId();
+            mediaUploadService.uploadImageAsync(logo, folder, url -> {
+                if (url != null) {
+                    cabinet.setLogo(url);
+                    cabinetRepository.save(cabinet);
+                    log.info("Logo mis à jour pour le cabinet {}: {}", cabinet.getNom(), url);
+                }
+            });
         }
 
-        Cabinet cabinet = cabinetRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageErreur.CABINET_NON_TROUVE));
+        Cabinet savedCabinet = cabinetRepository.save(cabinet);
+        log.info("Cabinet mis à jour: {}", savedCabinet.getNom());
 
-        // Vérifier si le nouveau nom est déjà utilisé par un autre cabinet
-        if (!cabinet.getNom().equals(dto.nom()) && cabinetRepository.existsByNom(dto.nom())) {
+        return cabinetMapper.toResponseDTO(savedCabinet);
+    }
+
+    /**
+     * Valide les données lors de la mise à jour
+     */
+    private void validateCabinetUpdate(CabinetCreateDTO dto, Cabinet currentCabinet) {
+        // Vérifier si le nouveau nom est déjà utilisé
+        if (!currentCabinet.getNom().equals(dto.nom()) && cabinetRepository.existsByNom(dto.nom())) {
             throw new BusinessException(MessageErreur.CABINET_DEJA_EXISTANT);
         }
 
-        // Vérifier si le nouvel email est déjà utilisé par un autre cabinet
-        if (!cabinet.getEmail().equals(dto.email()) && cabinetRepository.existsByEmail(dto.email())) {
+        // Vérifier si le nouvel email est déjà utilisé
+        if (!currentCabinet.getEmail().equals(dto.email()) && cabinetRepository.existsByEmail(dto.email())) {
             throw new BusinessException(MessageErreur.EMAIL_DEJA_UTILISE);
         }
-
-        // Mettre à jour les champs de base
-        cabinetMapper.updateFromDTO(dto, cabinet);
-
-        // Gérer le logo (nouveau fichier, nouvelle URL, ou pas de changement)
-        if (logo != null && !logo.isEmpty()) {
-            // Supprimer l'ancien logo si présent
-            if (cabinet.getLogo() != null && !cabinet.getLogo().isEmpty()) {
-                try {
-                    String oldPublicId = storageService.extractPublicId(cabinet.getLogo());
-                    if (oldPublicId != null) {
-                        storageService.deleteFile(oldPublicId);
-                    }
-                } catch (Exception e) {
-                    log.error("Erreur lors de la suppression de l'ancien logo: {}", e.getMessage());
-                }
-            }
-            
-            // Upload du nouveau logo
-            try {
-                String newLogoUrl = storageService.uploadFile(logo.getBytes(), 
-                        dto.nom().replace(" ", "_") + "_logo", 
-                        "medibook/cabinets/logos");
-                cabinet.setLogo(newLogoUrl);
-            } catch (Exception e) {
-                log.error("Erreur lors de l'upload du logo: {}", e.getMessage());
-                throw new BusinessException(MessageErreur.ERREUR_UPLOAD_LOGO);
-            }
-        } else if (dto.logoUrl() != null && !dto.logoUrl().isEmpty()) {
-            // Nouvelle URL logo fournie
-            cabinet.setLogo(dto.logoUrl());
-        }
-
-        Cabinet updatedCabinet = cabinetRepository.save(cabinet);
-        log.info("Cabinet mis à jour: {}", updatedCabinet.getNom());
-
-        return cabinetMapper.toResponseDTO(updatedCabinet);
     }
 
     /**
@@ -186,57 +259,34 @@ public class CabinetService {
      */
     @Transactional
     public void deleteCabinet(Long id, Long userId) {
-        // Vérifier que l'utilisateur est un Super Admin
-        Utilisateur user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé"));
-
-        if (user.getRole() != Role.SUPER_ADMIN) {
-            throw new UnauthorizedException(MessageErreur.ACCES_INTERDIT);
-        }
-
-        Cabinet cabinet = cabinetRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageErreur.CABINET_NON_TROUVE));
-
-        // Supprimer le logo si présent
-        if (cabinet.getLogo() != null && !cabinet.getLogo().isEmpty()) {
-            try {
-                String publicId = storageService.extractPublicId(cabinet.getLogo());
-                if (publicId != null) {
-                    storageService.deleteFile(publicId);
-                }
-            } catch (Exception e) {
-                log.error("Erreur lors de la suppression du logo: {}", e.getMessage());
-            }
-        }
+        // 1. Validation Super Admin
+        validateSuperAdmin(userId);
+        
+        // 2. Récupérer le cabinet
+        Cabinet cabinet = findCabinetById(id);
 
         cabinetRepository.delete(cabinet);
         log.info("Cabinet supprimé: {}", cabinet.getNom());
     }
 
     /**
-     * Active ou désactive un cabinet
+     * Bascule le statut d'un cabinet
      */
     @Transactional
     public CabinetResponseDTO toggleCabinetStatus(Long id, Long userId) {
-        // Vérifier que l'utilisateur est un Super Admin
-        Utilisateur user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé"));
+        // 1. Validation Super Admin
+        validateSuperAdmin(userId);
+        
+        // 2. Récupérer le cabinet
+        Cabinet cabinet = findCabinetById(id);
 
-        if (user.getRole() != Role.SUPER_ADMIN) {
-            throw new UnauthorizedException(MessageErreur.ACCES_INTERDIT);
-        }
+        cabinet.setStatus(cabinet.getStatus() == Cabinet.Status.ACTIF ? 
+                Cabinet.Status.INACTIF : Cabinet.Status.ACTIF);
 
-        Cabinet cabinet = cabinetRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageErreur.CABINET_NON_TROUVE));
+        Cabinet savedCabinet = cabinetRepository.save(cabinet);
+        log.info("Statut du cabinet {} basculé vers {}", savedCabinet.getNom(), savedCabinet.getStatus());
 
-        cabinet.setStatus(cabinet.getStatus() == Cabinet.Status.ACTIF 
-                ? Cabinet.Status.INACTIF 
-                : Cabinet.Status.ACTIF);
-
-        Cabinet updatedCabinet = cabinetRepository.save(cabinet);
-        log.info("Statut du cabinet {} basculé vers: {}", updatedCabinet.getNom(), updatedCabinet.getStatus());
-
-        return cabinetMapper.toResponseDTO(updatedCabinet);
+        return cabinetMapper.toResponseDTO(savedCabinet);
     }
 
     /**
@@ -244,46 +294,30 @@ public class CabinetService {
      */
     @Transactional
     public CabinetResponseDTO updateLogo(Long id, MultipartFile logo, Long userId) {
-        // Vérifier que l'utilisateur est un Super Admin
-        Utilisateur user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé"));
+        // 1. Validation Super Admin
+        validateSuperAdmin(userId);
+        
+        // 2. Récupérer le cabinet
+        Cabinet cabinet = findCabinetById(id);
 
-        if (user.getRole() != Role.SUPER_ADMIN) {
-            throw new UnauthorizedException(MessageErreur.ACCES_INTERDIT);
-        }
+        // 3. Upload async
+        String folder = "medibook/cabinets/" + cabinet.getId();
+        mediaUploadService.uploadImageAsync(logo, folder, url -> {
+            if (url != null) {
+                cabinet.setLogo(url);
+                cabinetRepository.save(cabinet);
+                log.info("Logo mis à jour pour le cabinet {}: {}", cabinet.getNom(), url);
+            }
+        });
 
-        Cabinet cabinet = cabinetRepository.findById(id)
+        return cabinetMapper.toResponseDTO(cabinet);
+    }
+    
+    /**
+     * Trouve un cabinet par ID ou throw une exception
+     */
+    private Cabinet findCabinetById(Long id) {
+        return cabinetRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(MessageErreur.CABINET_NON_TROUVE));
-
-        // Supprimer l'ancien logo si présent
-        if (cabinet.getLogo() != null && !cabinet.getLogo().isEmpty()) {
-            try {
-                String oldPublicId = storageService.extractPublicId(cabinet.getLogo());
-                if (oldPublicId != null) {
-                    storageService.deleteFile(oldPublicId);
-                }
-            } catch (Exception e) {
-                log.error("Erreur lors de la suppression de l'ancien logo: {}", e.getMessage());
-            }
-        }
-
-        // Upload du nouveau logo
-        String logoUrl = null;
-        if (logo != null && !logo.isEmpty()) {
-            try {
-                logoUrl = storageService.uploadFile(logo.getBytes(), 
-                        cabinet.getNom().replace(" ", "_") + "_logo", 
-                        "medibook/cabinets/logos");
-            } catch (Exception e) {
-                log.error("Erreur lors de l'upload du logo: {}", e.getMessage());
-                throw new BusinessException(MessageErreur.ERREUR_UPLOAD_LOGO);
-            }
-        }
-
-        cabinet.setLogo(logoUrl);
-        Cabinet updatedCabinet = cabinetRepository.save(cabinet);
-        log.info("Logo du cabinet {} mis à jour", updatedCabinet.getNom());
-
-        return cabinetMapper.toResponseDTO(updatedCabinet);
     }
 }

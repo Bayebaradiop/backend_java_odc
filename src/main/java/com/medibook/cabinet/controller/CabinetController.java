@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -42,11 +43,7 @@ public class CabinetController {
 
     @Operation(
             summary = "Créer un cabinet",
-            description = "Crée un nouveau cabinet médical. Réservé au Super Admin. Le logo peut être envoyé soit comme fichier (paramètre logo) soit comme URL externe (paramètre logoUrl).",
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    description = "Données du cabinet à créer. Tous les champs marqués comme requis doivent être remplis.",
-                    content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
-            )
+            description = "Crée un nouveau cabinet médical avec son administrateur. Réservé au Super Admin."
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -60,85 +57,46 @@ public class CabinetController {
             @ApiResponse(responseCode = "500", description = "Erreur serveur interne")
     })
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> createCabinet(
-            @Parameter(description = "Nom du cabinet", required = true, example = "Cabinet Médical Dakar")
-            @RequestParam("nom") String nom,
-            
-            @Parameter(description = "URL externe du logo (optionnel)", example = "https://exemple.com/logo.png")
-            @RequestParam(value = "logoUrl", required = false) String logoUrl,
-            
-            @Parameter(description = "Couleur primaire au format hexadécimal", example = "#FF5733")
-            @RequestParam(value = "couleurPrimaire", required = false) String couleurPrimaire,
-            
-            @Parameter(description = "Couleur secondaire au format hexadécimal", example = "#33FF57")
-            @RequestParam(value = "couleurSecondaire", required = false) String couleurSecondaire,
-            
-            @Parameter(description = "Adresse complète du cabinet", required = true, example = "Dakar, Senegal")
-            @RequestParam("adresse") String adresse,
-            
-            @Parameter(description = "Numéro de téléphone", required = true, example = "+221 33 123 45 67")
-            @RequestParam("telephone") String telephone,
-            
-            @Parameter(description = "Adresse email du cabinet", required = true, example = "contact@cabinetdakar.com")
-            @RequestParam("email") String email,
-            
-            @Parameter(description = "Fichier du logo (image)")
-            @RequestParam(value = "logo", required = false) MultipartFile logo) {
-        
-        log.info("createCabinet called with nom: {}, email: {}", nom, email);
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<ApiStandardResponse<CabinetResponseDTO>> createCabinet(
+            @Valid @ModelAttribute CabinetCreateDTO dto,
+            @Parameter(description = "Logo du cabinet")
+            @RequestPart(value = "logo", required = false) MultipartFile logo) {
         
         Long userId = jwtUserUtil.getCurrentUserId();
-        log.info("Current user ID: {}", userId);
-        
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiStandardResponse.error("Non authentifié. Veuillez vous connecter.", "ERR_UNAUTHORIZED"));
-        }
-        
-        // Créer le DTO manuellement
-        CabinetCreateDTO dto = new CabinetCreateDTO(
-                nom, logoUrl, couleurPrimaire, couleurSecondaire, adresse, telephone, email
-        );
+        log.info("createCabinet called with nom: {}, email: {}", dto.nom(), dto.email());
         
         CabinetResponseDTO response = cabinetService.createCabinet(dto, logo, userId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiStandardResponse.success(response, "Cabinet créé avec succès"));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiStandardResponse.success(response, "Cabinet créé avec succès"));
     }
 
     @Operation(summary = "Récupérer tous les cabinets", description = "Retourne la liste de tous les cabinets")
     @GetMapping
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
     public ResponseEntity<List<CabinetResponseDTO>> getAllCabinets() {
         return ResponseEntity.ok(cabinetService.getAllCabinets());
     }
 
     @Operation(summary = "Récupérer un cabinet par ID", description = "Retourne un cabinet spécifique")
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
     public ResponseEntity<CabinetResponseDTO> getCabinetById(@PathVariable Long id) {
         return ResponseEntity.ok(cabinetService.getCabinetById(id));
     }
 
     @Operation(summary = "Mettre à jour un cabinet", description = "Met à jour un cabinet existant. Réservé au Super Admin.")
     @PutMapping("/{id}")
-    public ResponseEntity<CabinetResponseDTO> updateCabinet(
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<ApiStandardResponse<CabinetResponseDTO>> updateCabinet(
             @PathVariable Long id,
-            @RequestParam("nom") String nom,
-            @RequestParam(value = "logoUrl", required = false) String logoUrl,
-            @RequestParam(value = "couleurPrimaire", required = false) String couleurPrimaire,
-            @RequestParam(value = "couleurSecondaire", required = false) String couleurSecondaire,
-            @RequestParam("adresse") String adresse,
-            @RequestParam("telephone") String telephone,
-            @RequestParam("email") String email,
-            @RequestParam(value = "logo", required = false) MultipartFile logo) {
+            @Valid @ModelAttribute CabinetCreateDTO dto,
+            @Parameter(description = "Logo du cabinet")
+            @RequestPart(value = "logo", required = false) MultipartFile logo) {
         
         Long userId = jwtUserUtil.getCurrentUserId();
-        if (userId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        
-        CabinetCreateDTO dto = new CabinetCreateDTO(
-                nom, logoUrl, couleurPrimaire, couleurSecondaire, adresse, telephone, email
-        );
-        
-        return ResponseEntity.ok(cabinetService.updateCabinet(id, dto, logo, userId));
+        CabinetResponseDTO response = cabinetService.updateCabinet(id, dto, logo, userId);
+        return ResponseEntity.ok(ApiStandardResponse.success(response, "Cabinet mis à jour avec succès"));
     }
 
     @Operation(summary = "Supprimer un cabinet", description = "Supprime un cabinet. Réservé au Super Admin.")
