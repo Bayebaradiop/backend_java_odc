@@ -25,14 +25,9 @@ public class PatientDispoController {
 
     private final CreneauService creneauService;
 
-    /**
-     * GET /api/patient/medecins/{id}/disponibilites
-     * Récupère les créneaux disponibles d'un médecin
-     * 
-     * @param id ID du médecin
-     * @param date (optionnel) Date spécifique au format YYYY-MM-DD
-     * @return Liste des créneaux disponibles
-     */
+    
+     //GET /api/patient/medecins/{id}/disponibilites
+   
     @GetMapping("/medecins/{id}/disponibilites")
     public ResponseEntity<Map<String, Object>> getDisponibilites(
             @PathVariable Long id,

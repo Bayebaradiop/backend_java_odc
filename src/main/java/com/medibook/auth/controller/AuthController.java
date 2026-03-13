@@ -1,17 +1,27 @@
 package com.medibook.auth.controller;
 
-import com.medibook.auth.dto.*;
+import java.util.Map;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.medibook.auth.dto.LoginRequest;
+import com.medibook.auth.dto.RegisterRequest;
 import com.medibook.auth.message.MessageSucces;
 import com.medibook.auth.service.AuthService;
 import com.medibook.common.security.JwtTokenProvider;
 import com.medibook.common.util.CookieUtil;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import com.medibook.user.dto.UserRequest;
+import com.medibook.user.service.UserService;
 
-import java.util.Map;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -21,6 +31,7 @@ public class AuthController {
     private final AuthService authService;
     private final CookieUtil cookieUtil;
     private final JwtTokenProvider jwtTokenProvider;
+    private final UserService userService;
 
     // POST /api/auth/login
     @PostMapping("/login")
@@ -34,7 +45,8 @@ public class AuthController {
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .body(Map.of(
                         "message", MessageSucces.CONNEXION_REUSSIE,
-                        "user", result.response()
+                        "user", result.response(),
+                        "token", result.token()
                 ));
     }
     
@@ -52,9 +64,11 @@ public class AuthController {
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .body(Map.of(
                         "message", MessageSucces.INSCRIPTION_REUSSIE,
-                        "user", result.response()
+                        "user", result.response(),
+                        "token", result.token()
                 ));
     }
+
 
 
     // POST /api/auth/logout
@@ -66,4 +80,19 @@ public class AuthController {
                 .header(HttpHeaders.SET_COOKIE, cookie.toString())
                 .body(Map.of("message", MessageSucces.DECONNEXION_REUSSIE));
     }
+
+
+    // GET /api/auth/profile
+    @GetMapping("/profile")
+    public ResponseEntity<?> getProfile() {
+        return ResponseEntity.ok(userService.getProfile());
+    }
+
+
+    // PUT /api/auth/profile
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateProfile(@RequestBody UserRequest request) {
+        return ResponseEntity.ok(userService.updateProfile(request));
+    }
+    
 }

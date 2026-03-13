@@ -30,11 +30,10 @@ public class RendezVousService {
     private final SecurityService securityService;
     private final RendezVousMapper mapper;
 
-    /**
-     * Créer un RDV (patient connecté)
-     */
+    
+     // Créer un RDV (patient connecté)
+     
     public RendezVousResponse creerRendezVous(RendezVousRequest request) {
-        // Récupérer le patient connecté
         Utilisateur patient = securityService.getUtilisateurConnecte();
 
         // Récupérer le créneau
@@ -65,9 +64,9 @@ public class RendezVousService {
     }
     
 
-    /**
-     * Annuler un RDV (patient connecté)
-     */
+    
+     //Annuler un RDV (patient connecté)
+    
     public RendezVousResponse annulerRendezVous(Long rdvId) {
         Utilisateur patient = securityService.getUtilisateurConnecte();
 
@@ -96,9 +95,10 @@ public class RendezVousService {
         return mapper.toRendezVousResponse(rendezVousRepository.save(rdv));
     }
 
-    /**
-     * Mes RDV (patient connecté)
-     */
+
+    
+     //Mes RDV (patient connecté)
+    
     @Transactional(readOnly = true)
     public List<RendezVousResponse> getMesRendezVous() {
         Utilisateur patient = securityService.getUtilisateurConnecte();
@@ -108,9 +108,9 @@ public class RendezVousService {
                 .toList();
     }
 
-    /**
-     * Mes RDV en attente
-     */
+    
+        // Mes RDV en attente
+     
     @Transactional(readOnly = true)
     public List<RendezVousResponse> getMesRendezVousEnAttente() {
         Utilisateur patient = securityService.getUtilisateurConnecte();
@@ -120,9 +120,10 @@ public class RendezVousService {
                 .toList();
     }
 
-    /**
-     * Mes RDV confirmés
-     */
+
+    
+     // Mes RDV confirmés
+     
     @Transactional(readOnly = true)
     public List<RendezVousResponse> getMesRendezVousConfirmes() {
         Utilisateur patient = securityService.getUtilisateurConnecte();
@@ -132,9 +133,10 @@ public class RendezVousService {
                 .toList();
     }
 
-    /**
-     * Historique (terminés + annulés)
-     */
+
+    
+     //Historique (terminés + annulés)
+     
     @Transactional(readOnly = true)
     public List<RendezVousResponse> getHistorique() {
         Utilisateur patient = securityService.getUtilisateurConnecte();
@@ -146,9 +148,10 @@ public class RendezVousService {
                 .toList();
     }
 
-    /**
-     * Détails d'un RDV
-     */
+
+    
+     // Détails d'un RDV
+     
     @Transactional(readOnly = true)
     public RendezVousResponse getRendezVousById(Long id) {
         Utilisateur patient = securityService.getUtilisateurConnecte();

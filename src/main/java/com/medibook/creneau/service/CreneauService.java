@@ -33,7 +33,6 @@ public class CreneauService {
      * - Sinon : créneaux des 7 prochains jours
      */
     public List<CreneauResponse> getDisponibilitesMedecin(Long medecinId, LocalDate date) {
-        // Vérifier que le médecin existe et est actif
         userRepository.findById(medecinId)
                 .filter(u -> u.getRole() == Role.MEDECIN && u.getStatus() == Status.ACTIF)
                 .orElseThrow(() -> new EntityNotFoundException(MessageErreur.MEDECIN_NOT_FOUND));
@@ -41,7 +40,6 @@ public class CreneauService {
         List<Creneau> creneaux;
 
         if (date != null) {
-            // Créneaux d'une date précise
             creneaux = creneauRepository.findByMedecinIdAndDateAndDisponibleTrue(medecinId, date);
         } else {
             // Créneaux des 7 prochains jours
@@ -56,9 +54,9 @@ public class CreneauService {
                 .toList();
     }
 
-    /**
-     * Récupère un créneau par son ID
-     */
+    
+    
+     // Récupère un créneau par son ID
     public CreneauResponse getCreneauById(Long id) {
         Creneau creneau = creneauRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(MessageErreur.CRENEAU_NOT_FOUND));

@@ -35,6 +35,7 @@ public class RendezVousMapper {
                 .medecinPrenom(medecin != null ? medecin.getPrenom() : null)
                 .medecinSpecialite(medecin != null && medecin.getSpecialite() != null 
                         ? medecin.getSpecialite().getNom() : null)
+                .medecinPhoto(medecin != null ? medecin.getPhoto() : null)
                 // Infos cabinet
                 .cabinetId(rdv.getCabinet() != null ? rdv.getCabinet().getId() : null)
                 .cabinetNom(rdv.getCabinet() != null ? rdv.getCabinet().getNom() : null)

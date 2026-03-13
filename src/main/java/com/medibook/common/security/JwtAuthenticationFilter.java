@@ -1,19 +1,20 @@
 package com.medibook.common.security;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
+import java.io.IOException;
+import java.util.List;
+
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
-import java.util.List;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
@@ -27,8 +28,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        // 1. Extraire le token depuis le cookie
+        // 1. Extraire le token depuis le cookie OU le header Authorization
         String token = getTokenFromCookies(request);
+        if (token == null) {
+            token = getTokenFromHeader(request);
+        }
 
         // 2. Si token présent et valide → authentifier
         if (token != null && jwtTokenProvider.validateToken(token)) {
@@ -59,6 +63,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     return cookie.getValue();
                 }
             }
+        }
+        return null;
+    }
+
+    // Lit le Bearer token depuis le header Authorization
+    private String getTokenFromHeader(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
         }
         return null;
     }

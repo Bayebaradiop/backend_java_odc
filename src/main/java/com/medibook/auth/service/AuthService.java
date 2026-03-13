@@ -1,15 +1,19 @@
 package com.medibook.auth.service;
 
-import com.medibook.auth.dto.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import com.medibook.auth.dto.AuthResponse;
+import com.medibook.auth.dto.LoginRequest;
+import com.medibook.auth.dto.RegisterRequest;
 import com.medibook.auth.message.MessageErreur;
 import com.medibook.common.enums.Role;
 import com.medibook.common.enums.Status;
 import com.medibook.common.security.JwtTokenProvider;
 import com.medibook.user.entity.Utilisateur;
 import com.medibook.user.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +42,7 @@ public class AuthService {
         // 4. Générer le token + construire la réponse
         return buildAuthResult(user);
     }
+    
 
     // --- REGISTER (patient uniquement) ---
     public AuthResult register(RegisterRequest request) {
@@ -67,6 +72,7 @@ public class AuthService {
         // 4. Générer le token + construire la réponse
         return buildAuthResult(user);
     }
+    
 
     // --- Méthode commune : token + réponse ---
     private AuthResult buildAuthResult(Utilisateur user) {
