@@ -22,6 +22,18 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
 
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
   # Configuration upload de fichiers
   servlet:
     multipart:
@@ -31,6 +43,8 @@ spring:
 
 server:
   port: ${SERVER_PORT:8085}
+
+
 
 springdoc:
   api-docs:
@@ -50,3 +64,8 @@ cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME}
   api-key: ${CLOUDINARY_API_KEY}
   api-secret: ${CLOUDINARY_API_SECRET}
+
+
+
+app:
+  front-url: https://app.medibook.com

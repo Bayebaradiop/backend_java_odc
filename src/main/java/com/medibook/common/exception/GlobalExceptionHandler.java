@@ -2,6 +2,7 @@ package com.medibook.common.exception;
 
 import com.medibook.common.dto.ApiStandardResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -12,6 +13,8 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @RestControllerAdvice
 @Slf4j
@@ -80,6 +83,34 @@ public class GlobalExceptionHandler {
         log.warn("File too large: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
                 .body(ApiStandardResponse.error("Le fichier est trop volumineux (max: 10MB)", ERR_FILE_TOO_LARGE));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiStandardResponse<?>> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+        log.warn("Data integrity violation: {}", ex.getMessage());
+        
+        String message = ex.getMessage();
+        String userFriendlyMessage = "Une erreur de données est survenue";
+        
+        // Analyser le message d'erreur pour fournir un message plus clair
+        if (message != null) {
+            if (message.contains("utilisateurs_telephone_key") || message.contains("telephone")) {
+                userFriendlyMessage = "Ce numéro de téléphone est déjà utilisé par un autre utilisateur";
+            } else if (message.contains("utilisateurs_email_key") || message.contains("email")) {
+                userFriendlyMessage = "Cette adresse email est déjà utilisée par un autre utilisateur";
+            } else if (message.contains("duplicate key")) {
+                // Essayer d'extraire le champ responsable
+                Pattern pattern = Pattern.compile("Key \\((.*?)\\)=");
+                Matcher matcher = pattern.matcher(message);
+                if (matcher.find()) {
+                    String field = matcher.group(1);
+                    userFriendlyMessage = "La valeur '" + field + "' existe déjà";
+                }
+            }
+        }
+        
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiStandardResponse.error(userFriendlyMessage, ERR_BUSINESS));
     }
 
     @ExceptionHandler(RuntimeException.class)
