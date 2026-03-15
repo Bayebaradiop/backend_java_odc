@@ -7,6 +7,8 @@ import com.medibook.common.event.SecretaireCreatedEvent;
 import com.medibook.common.exception.BusinessException;
 import com.medibook.common.exception.ResourceNotFoundException;
 import com.medibook.common.storage.MediaUploadService;
+import com.medibook.specialite.entity.Specialite;
+import com.medibook.specialite.repository.SpecialiteRepository;
 import com.medibook.user.dto.SecretaireRequest;
 import com.medibook.user.dto.UserResponse;
 import com.medibook.user.entity.Utilisateur;
@@ -32,6 +34,7 @@ import java.util.List;
 public class SecretaireService {
 
     private final UserRepository userRepository;
+    private final SpecialiteRepository specialiteRepository;
     private final UserMapper userMapper;
     private final MediaUploadService mediaUploadService;
     private final PasswordEncoder passwordEncoder;
@@ -49,21 +52,28 @@ public class SecretaireService {
         // 2. Valider les données du secretary
         validateSecretaireData(request, admin.getCabinet().getId());
 
-        // 3. Créer le secretary
+        // 3. Récupérer la spécialité
+        Specialite specialite = findSpecialiteById(request.specialiteId());
+
+        // 4. Valider que la spécialité appartient au cabinet
+        validateSpecialiteInCabinet(specialite, admin.getCabinet());
+
+        // 5. Créer le secretary
         Utilisateur secretaire = userMapper.toEntityFromSecretaire(request);
         secretaire.setCabinet(admin.getCabinet());
+        secretaire.setSpecialite(specialite);
         secretaire.setRole(Role.SECRETAIRE);
         secretaire.setStatus(Status.ACTIF);
         secretaire.setMotDePasse(passwordEncoder.encode(request.motDePasse()));
 
-        // 4. Sauvegarder d'abord pour avoir l'ID
+        // 6. Sauvegarder d'abord pour avoir l'ID
         Utilisateur savedSecretaire = userRepository.save(secretaire);
         log.info("Secrétaire créé: {} pour le cabinet {}", savedSecretaire.getEmail(), admin.getCabinet().getNom());
 
-        // 5. Gérer la photo: fichier uploadé vers Cloudinary
+        // 7. Gérer la photo: fichier uploadé vers Cloudinary
         handlePhotoCreation(savedSecretaire, photoFile);
 
-        // 6. Publier l'événement pour envoyer l'email de création de compte
+        // 8. Publier l'événement pour envoyer l'email de création de compte
         eventPublisher.publishEvent(new SecretaireCreatedEvent(
                 this,
                 savedSecretaire,
@@ -286,5 +296,22 @@ public class SecretaireService {
     private Utilisateur findSecretaireById(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Secrétaire non trouvé"));
+    }
+
+    /**
+     * Valide que la spécialité appartient au cabinet
+     */
+    private void validateSpecialiteInCabinet(Specialite specialite, Cabinet cabinet) {
+        if (specialite.getCabinet() == null || !specialite.getCabinet().getId().equals(cabinet.getId())) {
+            throw new BusinessException("La spécialité n'appartient pas à votre cabinet");
+        }
+    }
+
+    /**
+     * Trouve une spécialité par ID
+     */
+    private Specialite findSpecialiteById(Long id) {
+        return specialiteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Spécialité non trouvée"));
     }
 }

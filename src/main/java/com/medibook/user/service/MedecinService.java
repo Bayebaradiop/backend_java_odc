@@ -126,6 +126,31 @@ public class MedecinService {
     }
 
     /**
+     * Récupère les médecins du cabinet par spécialité (pour secretary)
+     */
+    @Transactional(readOnly = true)
+    public List<UserResponse> getMedecinsBySpecialite(Long secretaireId) {
+        Utilisateur secretaire = userRepository.findById(secretaireId)
+                .orElseThrow(() -> new ResourceNotFoundException("Secrétaire non trouvé"));
+
+        if (secretaire.getRole() != Role.SECRETAIRE) {
+            throw new BusinessException("Accès réservé aux secrétaires");
+        }
+
+        if (secretaire.getCabinet() == null || secretaire.getSpecialite() == null) {
+            throw new BusinessException("Le secrétaire doit appartenir à un cabinet et avoir une spécialité");
+        }
+
+        List<Utilisateur> medecins = userRepository.findByRoleAndCabinetIdAndSpecialiteId(
+                Role.MEDECIN,
+                secretaire.getCabinet().getId(),
+                secretaire.getSpecialite().getId()
+        );
+
+        return medecins.stream().map(userMapper::toResponse).toList();
+    }
+
+    /**
      * Récupère un médecin par son ID
      */
     @Transactional(readOnly = true)

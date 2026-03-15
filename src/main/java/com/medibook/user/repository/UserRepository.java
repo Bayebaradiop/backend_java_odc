@@ -20,6 +20,8 @@ public interface UserRepository extends JpaRepository<Utilisateur, Long> {
     // Méthodes pour les médecins
     List<Utilisateur> findByRoleAndCabinetId(Role role, Long cabinetId);
 
+    List<Utilisateur> findByRoleAndCabinetIdAndSpecialiteId(Role role, Long cabinetId, Long specialiteId);
+
     Optional<Utilisateur> findByIdAndCabinetId(Long id, Long cabinetId);
 
     boolean existsByEmailAndCabinetId(String email, Long cabinetId);

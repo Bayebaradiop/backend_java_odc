@@ -2,6 +2,7 @@ package com.medibook.user.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -31,5 +32,9 @@ public record SecretaireRequest(
         
         @Schema(description = "Mot de passe temporaire (optionnel pour mise à jour)", example = "MotDePasse123!")
         @Size(min = 8, message = "Le mot de passe doit contenir au moins 8 caractères")
-        String motDePasse
+        String motDePasse,
+        
+        @Schema(description = "ID de la spécialité", example = "1")
+        @NotNull(message = "La spécialité est obligatoire")
+        Long specialiteId
 ) {}
