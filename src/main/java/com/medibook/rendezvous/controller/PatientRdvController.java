@@ -27,6 +27,7 @@ public class PatientRdvController {
 
     private final RendezVousService rendezVousService;
 
+
     /**
      * POST /api/patient/rdv - Créer un RDV
      */
@@ -52,6 +53,7 @@ public class PatientRdvController {
         ));
     }
 
+
     /**
      * GET /api/patient/rdv/en-attente - Mes RDV en attente
      */
@@ -65,6 +67,8 @@ public class PatientRdvController {
         ));
     }
 
+
+    
     /**
      * GET /api/patient/rdv/confirmes - Mes RDV confirmés
      */
@@ -77,6 +81,7 @@ public class PatientRdvController {
                 "count", rdvs.size()
         ));
     }
+
 
     /**
      * GET /api/patient/rdv/historique - Historique (terminés + annulés)
@@ -91,6 +96,7 @@ public class PatientRdvController {
         ));
     }
 
+
     /**
      * GET /api/patient/rdv/{id} - Détails d'un RDV
      */
@@ -102,6 +108,7 @@ public class PatientRdvController {
                 "data", rdv
         ));
     }
+
 
     /**
      * PUT /api/patient/rdv/{id}/annuler - Annuler mon RDV
