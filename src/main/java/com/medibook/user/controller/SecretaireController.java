@@ -3,6 +3,7 @@ package com.medibook.user.controller;
 import com.medibook.common.dto.ApiStandardResponse;
 import com.medibook.common.security.JwtUserUtil;
 import com.medibook.user.dto.UserResponse;
+import com.medibook.user.message.MessageSucces;
 import com.medibook.user.service.MedecinService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -46,7 +47,7 @@ public class SecretaireController {
     public ResponseEntity<ApiStandardResponse<List<UserResponse>>> getMedecinsBySpecialite() {
         Long userId = jwtUserUtil.getCurrentUserId();
         List<UserResponse> medecins = medecinService.getMedecinsBySpecialite(userId);
-        return ResponseEntity.ok(ApiStandardResponse.success(medecins, "Médecins récupérés avec succès"));
+        return ResponseEntity.ok(ApiStandardResponse.success(medecins, MessageSucces.MEDECINS_RECUPERES));
     }
 }
 

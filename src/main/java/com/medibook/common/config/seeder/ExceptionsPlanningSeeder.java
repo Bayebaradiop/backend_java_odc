@@ -1,6 +1,6 @@
 package com.medibook.common.config.seeder;
 
-import com.medibook.ExceptionsPlanning.entity.ExceptionsPlanning;
+import com.medibook.ExceptionsPlanning.entity.ExceptionPlanning;
 import com.medibook.ExceptionsPlanning.repository.ExceptionsPlanningRepository;
 import com.medibook.common.enums.TypeException;
 import com.medibook.common.enums.Role;
@@ -66,9 +66,10 @@ public class ExceptionsPlanningSeeder implements Seeder {
         for (LocalDate jourFerie : joursFeries) {
             // Only add if the date is in the future or recent
             if (!jourFerie.isBefore(LocalDate.now().minusDays(30))) {
-                ExceptionsPlanning exception = ExceptionsPlanning.builder()
+                ExceptionPlanning exception = ExceptionPlanning.builder()
                         .medecin(medecin)
-                        .date(jourFerie)
+                        .dateDebut(jourFerie)
+                        .dateFin(jourFerie)
                         .type(TypeException.FERME)
                         .build();
                 exceptionsPlanningRepository.save(exception);
@@ -81,9 +82,10 @@ public class ExceptionsPlanningSeeder implements Seeder {
         LocalDate finVacances = debutVacances.plusDays(5);
         
         for (LocalDate date = debutVacances; !date.isAfter(finVacances); date = date.plusDays(1)) {
-            ExceptionsPlanning vacances = ExceptionsPlanning.builder()
+            ExceptionPlanning vacances = ExceptionPlanning.builder()
                     .medecin(medecin)
-                    .date(date)
+                    .dateDebut(date)
+                    .dateFin(date)
                     .type(TypeException.VACANCES)
                     .build();
             exceptionsPlanningRepository.save(vacances);
@@ -92,9 +94,10 @@ public class ExceptionsPlanningSeeder implements Seeder {
 
         // Créer quelques absences supplémentaires
         LocalDate absence1 = LocalDate.now().plusWeeks(1);
-        ExceptionsPlanning absence = ExceptionsPlanning.builder()
+        ExceptionPlanning absence = ExceptionPlanning.builder()
                 .medecin(medecin)
-                .date(absence1)
+                .dateDebut(absence1)
+                .dateFin(absence1)
                 .type(TypeException.ABSENT)
                 .build();
         exceptionsPlanningRepository.save(absence);
@@ -107,9 +110,10 @@ public class ExceptionsPlanningSeeder implements Seeder {
             // Vacances pour le médecin 2
             LocalDate debutVac2 = LocalDate.now().plusMonths(3);
             for (LocalDate date = debutVac2; date.isBefore(debutVac2.plusDays(7)); date = date.plusDays(1)) {
-                ExceptionsPlanning vacances2 = ExceptionsPlanning.builder()
+                ExceptionPlanning vacances2 = ExceptionPlanning.builder()
                         .medecin(medecin2)
-                        .date(date)
+                        .dateDebut(date)
+                        .dateFin(date)
                         .type(TypeException.VACANCES)
                         .build();
                 exceptionsPlanningRepository.save(vacances2);

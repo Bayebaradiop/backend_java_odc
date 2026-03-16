@@ -4,6 +4,7 @@ import com.medibook.common.dto.ApiStandardResponse;
 import com.medibook.common.security.JwtUserUtil;
 import com.medibook.planning.dto.PlanningRequest;
 import com.medibook.planning.dto.PlanningResponse;
+import com.medibook.planning.message.MessageSucces;
 import com.medibook.planning.service.PlanningService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -51,6 +52,6 @@ public class SecretairePlanningController {
         Long userId = jwtUserUtil.getCurrentUserId();
         PlanningResponse response = planningService.createPlanning(request, userId);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiStandardResponse.success(response, "Planning créé avec succès"));
+                .body(ApiStandardResponse.success(response, MessageSucces.PLANNING_CREE));
     }
 }
