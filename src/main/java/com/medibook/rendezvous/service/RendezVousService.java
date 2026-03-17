@@ -66,7 +66,7 @@ public class RendezVousService {
 
     
      //Annuler un RDV (patient connecté)
-    
+
     public RendezVousResponse annulerRendezVous(Long rdvId) {
         Utilisateur patient = securityService.getUtilisateurConnecte();
 

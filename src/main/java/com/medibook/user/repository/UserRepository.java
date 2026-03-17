@@ -19,7 +19,7 @@ public interface UserRepository extends JpaRepository<Utilisateur, Long> {
 
     boolean existsByTelephone(String telephone);
 
-    // Recherche de médecins avec filtres
+    // Recherche avec filtres (bara_dev - patient search)
     List<Utilisateur> findByRoleAndStatus(Role role, Status status);
 
     List<Utilisateur> findByRoleAndStatusAndSpecialiteId(Role role, Status status, Long specialiteId);
@@ -28,4 +28,15 @@ public interface UserRepository extends JpaRepository<Utilisateur, Long> {
 
     List<Utilisateur> findByRoleAndStatusAndSpecialiteIdAndCabinetId(
             Role role, Status status, Long specialiteId, Long cabinetId);
+
+    // Méthodes admin (lydevtech)
+    List<Utilisateur> findByRoleAndCabinetId(Role role, Long cabinetId);
+
+    List<Utilisateur> findByRoleAndCabinetIdAndSpecialiteId(Role role, Long cabinetId, Long specialiteId);
+
+    Optional<Utilisateur> findByIdAndCabinetId(Long id, Long cabinetId);
+
+    boolean existsByEmailAndCabinetId(String email, Long cabinetId);
+
+    boolean existsByTelephoneAndCabinetId(String telephone, Long cabinetId);
 }

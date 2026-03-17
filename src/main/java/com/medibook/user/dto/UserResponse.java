@@ -1,22 +1,50 @@
 package com.medibook.user.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import com.medibook.common.enums.Role;
 import com.medibook.common.enums.Status;
-
 import lombok.Builder;
 
+/**
+ * DTO pour les réponses utilisateur
+ */
 @Builder
+@Schema(description = "Réponse d'un utilisateur")
 public record UserResponse(
-    Long id,
-    String prenom,
-    String nom,
-    String email,
-    String telephone,
-    String photo,
-    Role role,
-    Status status,
-    Long cabinetId,
-    String cabinetNom,
-    Long specialiteId,
-    String specialiteNom
+        
+        @Schema(description = "ID de l'utilisateur", example = "1")
+        Long id,
+        
+        @Schema(description = "Prénom", example = "Jean")
+        String prenom,
+        
+        @Schema(description = "Nom", example = "Dupont")
+        String nom,
+        
+        @Schema(description = "Email", example = "jean.dupont@cabinet.com")
+        String email,
+        
+        @Schema(description = "Téléphone", example = "+221771234567")
+        String telephone,
+        
+        @Schema(description = "URL de la photo", example = "https://cloudinary.com/...")
+        String photo,
+        
+        @Schema(description = "Rôle", example = "MEDECIN")
+        Role role,
+        
+        @Schema(description = "Statut", example = "ACTIF")
+        Status status,
+        
+        @Schema(description = "ID du cabinet", example = "1")
+        Long cabinetId,
+        
+        @Schema(description = "Nom du cabinet", example = "Cabinet Central")
+        String cabinetNom,
+        
+        @Schema(description = "ID de la spécialité (pour médecin)", example = "1")
+        Long specialiteId,
+        
+        @Schema(description = "Nom de la spécialité (pour médecin)", example = "Cardiologie")
+        String specialiteNom
 ) {}

@@ -46,6 +46,10 @@ public class JwtTokenProvider {
         return getClaims(token).getPayload().get("role", String.class);
     }
 
+    public Long getUserIdFromToken(String token) {
+        return getClaims(token).getPayload().get("id", Long.class);
+    }
+
 
     public long getExpirationInSeconds() {
         return expiration / 1000;

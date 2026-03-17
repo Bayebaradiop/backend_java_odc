@@ -104,7 +104,7 @@ public class UserSeeder implements Seeder {
         log.info("   ✅ Médecin créé: jean.dupont@medibook.com - Cabinet: {}, Spécialité: {}", 
                 cabinetPrincipal.getNom(), medecineGenerale != null ? medecineGenerale.getNom() : "N/A");
 
-        // Créer une Secrétaire (liée au cabinet)
+        // Créer une Secrétaire (liée au cabinet + spécialité pour pouvoir voir les médecins)
         Utilisateur secretaire = Utilisateur.builder()
                 .prenom("Marie")
                 .nom("Sarr")
@@ -114,9 +114,87 @@ public class UserSeeder implements Seeder {
                 .role(Role.SECRETAIRE)
                 .status(Status.ACTIF)
                 .cabinet(cabinetPrincipal)
+                .specialite(medecineGenerale)
                 .build();
         userRepository.save(secretaire);
-        log.info("   ✅ Secrétaire créée: marie.sarr@medibook.com - Cabinet: {}", cabinetPrincipal.getNom());
+        log.info("   ✅ Secrétaire créée: marie.sarr@medibook.com - Cabinet: {}, Spécialité: {}", 
+                cabinetPrincipal.getNom(), medecineGenerale != null ? medecineGenerale.getNom() : "N/A");
+
+        // Créer un 2ème Médecin (Cardiologie - cabinet principal)
+        Specialite cardiologie = specialites.stream()
+                .filter(s -> s.getNom().equals("Cardiologie"))
+                .findFirst()
+                .orElse(medecineGenerale);
+
+        Utilisateur medecin2 = Utilisateur.builder()
+                .prenom("Amadou")
+                .nom("Ba")
+                .email("amadou.ba@medibook.com")
+                .telephone("+221330000004")
+                .motDePasse(passwordEncoder.encode(DEFAULT_PASSWORD))
+                .role(Role.MEDECIN)
+                .status(Status.ACTIF)
+                .cabinet(cabinetPrincipal)
+                .specialite(cardiologie)
+                .build();
+        userRepository.save(medecin2);
+        log.info("   ✅ Médecin 2 créé: amadou.ba@medibook.com - Cabinet: {}, Spécialité: {}", 
+                cabinetPrincipal.getNom(), cardiologie != null ? cardiologie.getNom() : "N/A");
+
+        // Créer un 2ème Admin (cabinet Sud) si 2ème cabinet existe
+        if (cabinets.size() > 1) {
+            Cabinet cabinetSud = cabinets.get(1);
+
+            Utilisateur adminSud = Utilisateur.builder()
+                    .prenom("Ousmane")
+                    .nom("Ndiaye")
+                    .email("admin.sud@medibook.com")
+                    .telephone("+221330000005")
+                    .motDePasse(passwordEncoder.encode(DEFAULT_PASSWORD))
+                    .role(Role.ADMIN)
+                    .status(Status.ACTIF)
+                    .cabinet(cabinetSud)
+                    .build();
+            userRepository.save(adminSud);
+            log.info("   ✅ Admin Sud créé: admin.sud@medibook.com - Cabinet: {}", cabinetSud.getNom());
+
+            // Médecin pour cabinet Sud
+            Specialite ophtalmologie = specialites.stream()
+                    .filter(s -> s.getNom().equals("Ophtalmologie"))
+                    .findFirst()
+                    .orElse(null);
+
+            if (ophtalmologie != null) {
+                Utilisateur medecinSud = Utilisateur.builder()
+                        .prenom("Ibrahima")
+                        .nom("Diop")
+                        .email("ibrahima.diop@medibook.com")
+                        .telephone("+221330000006")
+                        .motDePasse(passwordEncoder.encode(DEFAULT_PASSWORD))
+                        .role(Role.MEDECIN)
+                        .status(Status.ACTIF)
+                        .cabinet(cabinetSud)
+                        .specialite(ophtalmologie)
+                        .build();
+                userRepository.save(medecinSud);
+                log.info("   ✅ Médecin Sud créé: ibrahima.diop@medibook.com");
+            }
+
+            // Secrétaire pour cabinet Sud
+            Utilisateur secretaireSud = Utilisateur.builder()
+                    .prenom("Aissatou")
+                    .nom("Fall")
+                    .email("aissatou.fall@medibook.com")
+                    .telephone("+221330000007")
+                    .motDePasse(passwordEncoder.encode(DEFAULT_PASSWORD))
+                    .role(Role.SECRETAIRE)
+                    .status(Status.ACTIF)
+                    .cabinet(cabinetSud)
+                    .specialite(ophtalmologie)
+                    .build();
+            userRepository.save(secretaireSud);
+            log.info("   ✅ Secrétaire Sud créée: aissatou.fall@medibook.com");
+        }
 
         // Créer un Patient (sans cabinet)
         Utilisateur patient = Utilisateur.builder()

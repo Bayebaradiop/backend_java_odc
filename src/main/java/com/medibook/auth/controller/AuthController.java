@@ -20,12 +20,17 @@ import com.medibook.common.security.JwtTokenProvider;
 import com.medibook.common.util.CookieUtil;
 import com.medibook.user.dto.UserRequest;
 import com.medibook.user.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Tag(name = "Authentication", description = "API d'authentification - Connexion, inscription, déconnexion")
 public class AuthController {
 
     private final AuthService authService;
@@ -33,7 +38,12 @@ public class AuthController {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserService userService;
 
-    // POST /api/auth/login
+    @Operation(summary = "Connexion", description = "Authentifie un utilisateur et retourne un token JWT")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Connexion réussie"),
+        @ApiResponse(responseCode = "401", description = "Email ou mot de passe incorrect"),
+        @ApiResponse(responseCode = "403", description = "Compte inactif")
+    })
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         AuthService.AuthResult result = authService.login(request);
@@ -49,10 +59,12 @@ public class AuthController {
                         "token", result.token()
                 ));
     }
-    
 
-
-    // POST /api/auth/register
+    @Operation(summary = "Inscription", description = "Crée un nouveau compte patient")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Inscription réussie"),
+        @ApiResponse(responseCode = "400", description = "Email ou téléphone déjà utilisé")
+    })
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         AuthService.AuthResult result = authService.register(request);
@@ -69,9 +81,8 @@ public class AuthController {
                 ));
     }
 
-
-
-    // POST /api/auth/logout
+    @Operation(summary = "Déconnexion", description = "Déconnecte l'utilisateur en supprimant le cookie JWT")
+    @ApiResponse(responseCode = "200", description = "Déconnexion réussie")
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
         ResponseCookie cookie = cookieUtil.deleteTokenCookie();
@@ -81,15 +92,13 @@ public class AuthController {
                 .body(Map.of("message", MessageSucces.DECONNEXION_REUSSIE));
     }
 
-
-    // GET /api/auth/profile
+    @Operation(summary = "Mon profil", description = "Retourne les informations du profil connecté")
     @GetMapping("/profile")
     public ResponseEntity<?> getProfile() {
         return ResponseEntity.ok(userService.getProfile());
     }
 
-
-    // PUT /api/auth/profile
+    @Operation(summary = "Modifier mon profil", description = "Met à jour les informations du profil connecté")
     @PutMapping("/profile")
     public ResponseEntity<?> updateProfile(@RequestBody UserRequest request) {
         return ResponseEntity.ok(userService.updateProfile(request));
