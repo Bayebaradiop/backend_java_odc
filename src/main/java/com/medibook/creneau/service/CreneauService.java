@@ -8,11 +8,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.medibook.common.enums.Role;
 import com.medibook.common.enums.Status;
+import com.medibook.creneau.dto.CreneauRequest;
 import com.medibook.creneau.dto.CreneauResponse;
 import com.medibook.creneau.entity.Creneau;
 import com.medibook.creneau.mapper.CreneauMapper;
 import com.medibook.creneau.message.MessageErreur;
 import com.medibook.creneau.repository.CreneauRepository;
+import com.medibook.user.entity.Utilisateur;
 import com.medibook.user.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -61,5 +63,22 @@ public class CreneauService {
         Creneau creneau = creneauRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(MessageErreur.CRENEAU_NOT_FOUND));
         return mapper.toCreneauResponse(creneau);
+    }
+
+    // ===== Méthodes Secrétaire =====
+
+    public List<CreneauResponse> getCreneauxMedecin(Long medecinId) {
+        return creneauRepository.findByMedecinId(medecinId)
+                .stream().map(mapper::toCreneauResponse).toList();
+    }
+
+    @Transactional
+    public void supprimerCreneau(Long id) {
+        Creneau creneau = creneauRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(MessageErreur.CRENEAU_NOT_FOUND));
+        if (!creneau.getDisponible()) {
+            throw new IllegalStateException(MessageErreur.CRENEAU_NON_DISPONIBLE);
+        }
+        creneauRepository.delete(creneau);
     }
 }

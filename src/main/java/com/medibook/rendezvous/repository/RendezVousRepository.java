@@ -22,4 +22,33 @@ public interface RendezVousRepository extends JpaRepository<RendezVous, Long> {
 
     // Historique (terminés + annulés)
     List<RendezVous> findByPatientIdAndStatutInOrderByIdDesc(Long patientId, List<StatutRdv> statuts);
+
+    // RDV d'un médecin (triés par id décroissant)
+    List<RendezVous> findByMedecinIdOrderByIdDesc(Long medecinId);
+
+    // RDV d'un médecin par statut
+    List<RendezVous> findByMedecinIdAndStatut(Long medecinId, StatutRdv statut);
+
+    // Comptages pour stats médecin
+    long countByMedecinId(Long medecinId);
+    long countByMedecinIdAndStatut(Long medecinId, StatutRdv statut);
+
+    // Comptages pour stats admin (par cabinet)
+    long countByCabinetId(Long cabinetId);
+    long countByCabinetIdAndStatut(Long cabinetId, StatutRdv statut);
+
+    // Patients distincts d'un médecin
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(DISTINCT r.patient.id) FROM RendezVous r WHERE r.medecin.id = :medecinId")
+    long countDistinctPatientsByMedecinId(@org.springframework.data.repository.query.Param("medecinId") Long medecinId);
+
+    // Patients distincts d'un cabinet
+    @org.springframework.data.jpa.repository.Query("SELECT COUNT(DISTINCT r.patient.id) FROM RendezVous r WHERE r.cabinet.id = :cabinetId")
+    long countDistinctPatientsByCabinetId(@org.springframework.data.repository.query.Param("cabinetId") Long cabinetId);
+
+    // Comptage global par statut (super admin)
+    long countByStatut(StatutRdv statut);
+
+    // RDV par cabinet (pour secrétaire)
+    List<RendezVous> findByCabinetIdOrderByIdDesc(Long cabinetId);
+    List<RendezVous> findByCabinetIdAndStatut(Long cabinetId, StatutRdv statut);
 }

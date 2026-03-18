@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.medibook.common.enums.Role;
@@ -39,4 +41,11 @@ public interface UserRepository extends JpaRepository<Utilisateur, Long> {
     boolean existsByEmailAndCabinetId(String email, Long cabinetId);
 
     boolean existsByTelephoneAndCabinetId(String telephone, Long cabinetId);
+
+    @Query("SELECT u FROM Utilisateur u LEFT JOIN FETCH u.cabinet LEFT JOIN FETCH u.specialite WHERE u.id = :id")
+    Optional<Utilisateur> findByIdWithCabinetAndSpecialite(@Param("id") Long id);
+
+    // Comptages pour stats
+    long countByRoleAndCabinetId(Role role, Long cabinetId);
+    long countByRole(Role role);
 }

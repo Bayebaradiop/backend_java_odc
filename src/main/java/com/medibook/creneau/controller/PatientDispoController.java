@@ -16,11 +16,13 @@ import com.medibook.creneau.dto.CreneauResponse;
 import com.medibook.creneau.message.MessageSucces;
 import com.medibook.creneau.service.CreneauService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/patient")
 @RequiredArgsConstructor
+@Tag(name = "Disponibilités - Patient", description = "API de consultation des créneaux disponibles pour les patients")
 public class PatientDispoController {
 
     private final CreneauService creneauService;

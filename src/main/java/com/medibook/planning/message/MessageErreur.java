@@ -12,6 +12,10 @@ public class MessageErreur {
     public static final String MEDECIN_NON_TROUVE = "Médecin non trouvé";
     public static final String PLANNING_NON_TROUVE = "Planning non trouvé";
     public static final String PLANNING_EXISTANT = "Un planning existe déjà pour ce jour";
+    public static final String NON_AUTHENTIFIE = "Non authentifié";
+    public static final String ACCES_MEDECIN_SEUL = "Accès interdit - Réservé aux médecins";
+    public static final String DONNEES_INVALIDES = "Données invalides";
+    public static final String ACCES_SECRETAIRE_SPECIALITE = "Accès interdit - Réservé au secrétaire de la même spécialité";
 
     // Erreurs secretary
     public static final String ACCES_SECRETAIRE_SEUL = "Accès réservé aux secrétaires";

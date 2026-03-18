@@ -79,7 +79,7 @@ public class PlanningService {
      * Valide que l'utilisateur est un secretary avec une spécialité
      */
     private Utilisateur validateAndGetSecretaire(Long secretaireId) {
-        Utilisateur secretaire = userRepository.findById(secretaireId)
+        Utilisateur secretaire = userRepository.findByIdWithCabinetAndSpecialite(secretaireId)
                 .orElseThrow(() -> new ResourceNotFoundException(MessageErreur.UTILISATEUR_NON_TROUVE));
 
         if (secretaire.getRole() != com.medibook.common.enums.Role.SECRETAIRE) {
@@ -97,7 +97,7 @@ public class PlanningService {
      * Valide que le médecin existe
      */
     private Utilisateur validateAndGetMedecin(Long medecinId) {
-        return userRepository.findById(medecinId)
+        return userRepository.findByIdWithCabinetAndSpecialite(medecinId)
                 .orElseThrow(() -> new ResourceNotFoundException(MessageErreur.MEDECIN_NON_TROUVE));
     }
 

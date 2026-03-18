@@ -47,6 +47,7 @@ public class SecurityConfig {
                 .requestMatchers("/").permitAll()
 
                 // Routes par rôle
+                .requestMatchers("/api/super-admin/**").hasRole("SUPER_ADMIN")
                 .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 .requestMatchers("/api/medecin/**").hasRole("MEDECIN")
                 .requestMatchers("/api/secretaire/**").hasRole("SECRETAIRE")

@@ -18,11 +18,13 @@ import com.medibook.rendezvous.dto.RendezVousResponse;
 import com.medibook.rendezvous.message.MessageSucces;
 import com.medibook.rendezvous.service.RendezVousService;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/patient/rdv")
 @RequiredArgsConstructor
+@Tag(name = "Rendez-vous - Patient", description = "API de gestion des rendez-vous pour les patients")
 public class PatientRdvController {
 
     private final RendezVousService rendezVousService;

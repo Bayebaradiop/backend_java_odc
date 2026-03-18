@@ -16,11 +16,13 @@ import com.medibook.patient.service.PatientSearchService;
 import com.medibook.specialite.dto.SpecialiteResponse;
 import com.medibook.user.dto.MedecinResponse;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/patient")
 @RequiredArgsConstructor
+@Tag(name = "Recherche - Patient", description = "API de recherche de cabinets, spécialités et médecins pour les patients")
 public class PatientSearchController {
 
     private final PatientSearchService patientSearchService;

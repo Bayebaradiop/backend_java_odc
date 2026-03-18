@@ -165,4 +165,92 @@ public class RendezVousService {
 
         return mapper.toRendezVousResponse(rdv);
     }
+
+    // ===== Méthodes Médecin =====
+
+    @Transactional(readOnly = true)
+    public List<RendezVousResponse> getRdvMedecin() {
+        Utilisateur medecin = securityService.getUtilisateurConnecte();
+        return rendezVousRepository.findByMedecinIdOrderByIdDesc(medecin.getId())
+                .stream().map(mapper::toRendezVousResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<RendezVousResponse> getRdvMedecinEnAttente() {
+        Utilisateur medecin = securityService.getUtilisateurConnecte();
+        return rendezVousRepository.findByMedecinIdAndStatut(medecin.getId(), StatutRdv.EN_ATTENTE)
+                .stream().map(mapper::toRendezVousResponse).toList();
+    }
+
+    public RendezVousResponse confirmerRdv(Long rdvId) {
+        Utilisateur medecin = securityService.getUtilisateurConnecte();
+        RendezVous rdv = rendezVousRepository.findById(rdvId)
+                .orElseThrow(() -> new EntityNotFoundException(MessageErreur.RDV_NOT_FOUND));
+        if (!rdv.getMedecin().getId().equals(medecin.getId())) {
+            throw new IllegalStateException(MessageErreur.RDV_NOT_FOUND);
+        }
+        if (rdv.getStatut() != StatutRdv.EN_ATTENTE) {
+            throw new IllegalStateException(MessageErreur.CONFIRMATION_IMPOSSIBLE);
+        }
+        rdv.setStatut(StatutRdv.CONFIRME);
+        return mapper.toRendezVousResponse(rendezVousRepository.save(rdv));
+    }
+
+    public RendezVousResponse terminerRdv(Long rdvId) {
+        Utilisateur medecin = securityService.getUtilisateurConnecte();
+        RendezVous rdv = rendezVousRepository.findById(rdvId)
+                .orElseThrow(() -> new EntityNotFoundException(MessageErreur.RDV_NOT_FOUND));
+        if (!rdv.getMedecin().getId().equals(medecin.getId())) {
+            throw new IllegalStateException(MessageErreur.RDV_NOT_FOUND);
+        }
+        if (rdv.getStatut() != StatutRdv.CONFIRME) {
+            throw new IllegalStateException(MessageErreur.TERMINAISON_IMPOSSIBLE);
+        }
+        rdv.setStatut(StatutRdv.TERMINE);
+        return mapper.toRendezVousResponse(rendezVousRepository.save(rdv));
+    }
+
+    // ===== Méthodes Secrétaire =====
+
+    @Transactional(readOnly = true)
+    public List<RendezVousResponse> getRdvCabinet(Long cabinetId) {
+        return rendezVousRepository.findByCabinetIdOrderByIdDesc(cabinetId)
+                .stream().map(mapper::toRendezVousResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<RendezVousResponse> getRdvCabinetParStatut(Long cabinetId, StatutRdv statut) {
+        return rendezVousRepository.findByCabinetIdAndStatut(cabinetId, statut)
+                .stream().map(mapper::toRendezVousResponse).toList();
+    }
+
+    public RendezVousResponse confirmerRdvParSecretaire(Long rdvId, Long cabinetId) {
+        RendezVous rdv = rendezVousRepository.findById(rdvId)
+                .orElseThrow(() -> new EntityNotFoundException(MessageErreur.RDV_NOT_FOUND));
+        if (!rdv.getCabinet().getId().equals(cabinetId)) {
+            throw new IllegalStateException(MessageErreur.RDV_NOT_FOUND);
+        }
+        if (rdv.getStatut() != StatutRdv.EN_ATTENTE) {
+            throw new IllegalStateException(MessageErreur.CONFIRMATION_IMPOSSIBLE);
+        }
+        rdv.setStatut(StatutRdv.CONFIRME);
+        return mapper.toRendezVousResponse(rendezVousRepository.save(rdv));
+    }
+
+    public RendezVousResponse annulerRdvParSecretaire(Long rdvId, Long cabinetId) {
+        RendezVous rdv = rendezVousRepository.findById(rdvId)
+                .orElseThrow(() -> new EntityNotFoundException(MessageErreur.RDV_NOT_FOUND));
+        if (!rdv.getCabinet().getId().equals(cabinetId)) {
+            throw new IllegalStateException(MessageErreur.RDV_NOT_FOUND);
+        }
+        if (rdv.getStatut() == StatutRdv.ANNULE) {
+            throw new IllegalStateException(MessageErreur.RDV_DEJA_ANNULE);
+        }
+        rdv.setStatut(StatutRdv.ANNULE);
+        if (rdv.getCreneau() != null) {
+            rdv.getCreneau().setDisponible(true);
+            creneauRepository.save(rdv.getCreneau());
+        }
+        return mapper.toRendezVousResponse(rendezVousRepository.save(rdv));
+    }
 }
