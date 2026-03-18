@@ -8,6 +8,7 @@ import com.medibook.user.entity.Utilisateur;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "exceptions_planning")
@@ -34,4 +35,13 @@ public class ExceptionsPlanning {
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(nullable = false, columnDefinition = "typeException")
     private TypeException type;
+
+    @Column(name = "heure_debut")
+    private LocalTime heureDebut;
+
+    @Column(name = "heure_fin")
+    private LocalTime heureFin;
+
+    @Column(length = 500)
+    private String motif;
 }

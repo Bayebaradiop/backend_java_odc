@@ -1,10 +1,13 @@
 package com.medibook.rendezvous.service;
 
 import java.util.List;
+import java.time.LocalTime;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.medibook.ExceptionsPlanning.entity.ExceptionsPlanning;
+import com.medibook.ExceptionsPlanning.repository.ExceptionsPlanningRepository;
 import com.medibook.common.enums.StatutRdv;
 import com.medibook.common.security.SecurityService;
 import com.medibook.creneau.entity.Creneau;
@@ -27,6 +30,7 @@ public class RendezVousService {
 
     private final RendezVousRepository rendezVousRepository;
     private final CreneauRepository creneauRepository;
+    private final ExceptionsPlanningRepository exceptionsPlanningRepository;
     private final SecurityService securityService;
     private final RendezVousMapper mapper;
 
@@ -42,6 +46,11 @@ public class RendezVousService {
 
         // Vérifier disponibilité
         if (!creneau.getDisponible()) {
+            throw new IllegalStateException(MessageErreur.CRENEAU_NON_DISPONIBLE);
+        }
+
+        // Bloque la prise de RDV si le médecin est indisponible sur ce créneau.
+        if (hasBlockingException(creneau)) {
             throw new IllegalStateException(MessageErreur.CRENEAU_NON_DISPONIBLE);
         }
 
@@ -252,5 +261,27 @@ public class RendezVousService {
             creneauRepository.save(rdv.getCreneau());
         }
         return mapper.toRendezVousResponse(rendezVousRepository.save(rdv));
+    }
+
+    private boolean hasBlockingException(Creneau creneau) {
+        List<ExceptionsPlanning> exceptions = exceptionsPlanningRepository
+                .findByMedecinIdAndDate(creneau.getMedecin().getId(), creneau.getDate());
+
+        for (ExceptionsPlanning exception : exceptions) {
+            if (exception.getHeureDebut() == null || exception.getHeureFin() == null) {
+                return true;
+            }
+
+            LocalTime creneauDebut = creneau.getHeureDebut();
+            LocalTime creneauFin = creneau.getHeureFin();
+            LocalTime exceptionDebut = exception.getHeureDebut();
+            LocalTime exceptionFin = exception.getHeureFin();
+
+            if (creneauDebut.isBefore(exceptionFin) && creneauFin.isAfter(exceptionDebut)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
