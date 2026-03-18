@@ -138,7 +138,7 @@ Pour Swagger, utilisez le bouton **Authorize** 🔒 et collez : `Bearer <votre_t
 }
 ```
 
-> ⚠️ **Copiez le `token` retourné et collez-le dans Swagger Authorize : `Bearer <token>`**
+>  **Copiez le `token` retourné et collez-le dans Swagger Authorize : `Bearer <token>`**
 
 ---
 

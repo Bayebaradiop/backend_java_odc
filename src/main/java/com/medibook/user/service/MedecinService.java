@@ -90,7 +90,11 @@ public class MedecinService {
      */
     private void handlePhotoCreation(Utilisateur medecin, MultipartFile photoFile) {
         if (photoFile != null && !photoFile.isEmpty()) {
-            uploadPhotoAsync(medecin.getId(), photoFile, medecin.getEmail());
+            String folder = "medibook/medecins/" + medecin.getId();
+            String url = mediaUploadService.uploadImage(photoFile, folder);
+            medecin.setPhoto(url);
+            userRepository.save(medecin);
+            log.info("Photo uploadée pour le médecin {}: {}", medecin.getEmail(), url);
         }
     }
 
@@ -108,8 +112,11 @@ public class MedecinService {
             if (oldPhoto != null && !oldPhoto.isEmpty()) {
                 mediaUploadService.deleteImageAsync(oldPhoto);
             }
-            // Upload le nouveau fichier
-            uploadPhotoAsync(medecin.getId(), photoFile, medecin.getEmail());
+            // Upload le nouveau fichier de manière synchrone
+            String folder = "medibook/medecins/" + medecin.getId();
+            String url = mediaUploadService.uploadImage(photoFile, folder);
+            medecin.setPhoto(url);
+            log.info("Photo uploadée pour le médecin {}: {}", medecin.getEmail(), url);
         }
         // Si pas de nouveau fichier → conserver l'ancienne photo (pas de changement)
     }
@@ -287,17 +294,5 @@ public class MedecinService {
                 .orElseThrow(() -> new ResourceNotFoundException("Spécialité non trouvée"));
     }
 
-    private void uploadPhotoAsync(Long medecinId, MultipartFile photo, String medecinEmail) {
-        String folder = "medibook/medecins/" + medecinId;
-        mediaUploadService.uploadImageAsync(photo, folder, url -> {
-            if (url != null) {
-                Utilisateur medecin = userRepository.findById(medecinId).orElse(null);
-                if (medecin != null) {
-                    medecin.setPhoto(url);
-                    userRepository.save(medecin);
-                    log.info("Photo uploadée pour le médecin {}: {}", medecinEmail, url);
-                }
-            }
-        });
-    }
+
 }

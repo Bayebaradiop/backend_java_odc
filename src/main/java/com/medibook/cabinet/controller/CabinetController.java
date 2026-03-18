@@ -86,11 +86,11 @@ public class CabinetController {
     }
 
     @Operation(summary = "Mettre à jour un cabinet", description = "Met à jour un cabinet existant. Réservé au Super Admin.")
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiStandardResponse<CabinetResponseDTO>> updateCabinet(
             @PathVariable Long id,
-            @Valid @ModelAttribute CabinetCreateDTO dto,
+            @Valid @RequestPart("dto") CabinetCreateDTO dto,
             @Parameter(description = "Logo du cabinet")
             @RequestPart(value = "logo", required = false) MultipartFile logo) {
         
@@ -124,7 +124,7 @@ public class CabinetController {
     }
 
     @Operation(summary = "Mettre à jour le logo", description = "Met à jour le logo d'un cabinet. Réservé au Super Admin.")
-    @PatchMapping("/{id}/logo")
+    @PatchMapping(value = "/{id}/logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<CabinetResponseDTO> updateLogo(
             @PathVariable Long id,
             @RequestParam("logo") MultipartFile logo) {

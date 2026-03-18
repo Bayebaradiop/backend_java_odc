@@ -53,10 +53,10 @@ public class AdminController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> createMedecin(
             @Parameter(description = "Données du médecin")
-            @ModelAttribute @Valid MedecinRequest request,
+            @RequestPart("request") @Valid MedecinRequest request,
             
             @Parameter(description = "Fichier photo du médecin (optionnel)")
-            @RequestParam(value = "photo", required = false) MultipartFile photo) {
+            @RequestPart(value = "photo", required = false) MultipartFile photo) {
         
         Long userId = jwtUserUtil.getCurrentUserId();
         UserResponse response = medecinService.createMedecin(request, photo, userId);
@@ -89,10 +89,10 @@ public class AdminController {
             @Parameter(description = "ID du médecin", required = true)
             @PathVariable Long medecinId,
             
-            @ModelAttribute @Valid MedecinRequest request,
+            @RequestPart("request") @Valid MedecinRequest request,
             
             @Parameter(description = "Fichier photo (laisser vide pour conserver l'actuelle)")
-            @RequestParam(value = "photo", required = false) MultipartFile photo) {
+            @RequestPart(value = "photo", required = false) MultipartFile photo) {
         
         Long userId = jwtUserUtil.getCurrentUserId();
         UserResponse response = medecinService.updateMedecin(medecinId, request, photo, userId);
@@ -139,10 +139,10 @@ public class AdminController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> createSecretaire(
             @Parameter(description = "Données du/de la secretary")
-            @ModelAttribute @Valid SecretaireRequest request,
+            @RequestPart("request") @Valid SecretaireRequest request,
             
             @Parameter(description = "Fichier photo du/de la secretary")
-            @RequestParam(value = "photo", required = false) MultipartFile photo) {
+            @RequestPart(value = "photo", required = false) MultipartFile photo) {
         
         Long userId = jwtUserUtil.getCurrentUserId();
         UserResponse response = secretaireService.createSecretaire(request, photo, userId);
@@ -175,10 +175,10 @@ public class AdminController {
             @Parameter(description = "ID du/de la secretary", required = true)
             @PathVariable Long secretaireId,
             
-            @ModelAttribute @Valid SecretaireRequest request,
+            @RequestPart("request") @Valid SecretaireRequest request,
             
             @Parameter(description = "Fichier photo (laisser vide pour conserver l'actuelle)")
-            @RequestParam(value = "photo", required = false) MultipartFile photo) {
+            @RequestPart(value = "photo", required = false) MultipartFile photo) {
         
         Long userId = jwtUserUtil.getCurrentUserId();
         UserResponse response = secretaireService.updateSecretaire(secretaireId, request, photo, userId);

@@ -89,7 +89,11 @@ public class SecretaireService {
      */
     private void handlePhotoCreation(Utilisateur secretaire, MultipartFile photoFile) {
         if (photoFile != null && !photoFile.isEmpty()) {
-            uploadPhotoAsync(secretaire.getId(), photoFile, secretaire.getEmail());
+            String folder = "medibook/secretaires/" + secretaire.getId();
+            String url = mediaUploadService.uploadImage(photoFile, folder);
+            secretaire.setPhoto(url);
+            userRepository.save(secretaire);
+            log.info("Photo uploadée pour le/la secrétaire {}: {}", secretaire.getEmail(), url);
         }
     }
 
@@ -107,8 +111,11 @@ public class SecretaireService {
             if (oldPhoto != null && !oldPhoto.isEmpty()) {
                 mediaUploadService.deleteImageAsync(oldPhoto);
             }
-            // Upload le nouveau fichier
-            uploadPhotoAsync(secretaire.getId(), photoFile, secretaire.getEmail());
+            // Upload le nouveau fichier de manière synchrone
+            String folder = "medibook/secretaires/" + secretaire.getId();
+            String url = mediaUploadService.uploadImage(photoFile, folder);
+            secretaire.setPhoto(url);
+            log.info("Photo uploadée pour le/la secrétaire {}: {}", secretaire.getEmail(), url);
         }
         // Si pas de nouveau fichier → conserver l'ancienne photo (pas de changement)
     }
@@ -116,19 +123,7 @@ public class SecretaireService {
     /**
      * Upload la photo de manière asynchrone
      */
-    private void uploadPhotoAsync(Long secretaireId, MultipartFile photo, String secretaireEmail) {
-        String folder = "medibook/secretaires/" + secretaireId;
-        mediaUploadService.uploadImageAsync(photo, folder, url -> {
-            if (url != null) {
-                Utilisateur secretaire = userRepository.findById(secretaireId).orElse(null);
-                if (secretaire != null) {
-                    secretaire.setPhoto(url);
-                    userRepository.save(secretaire);
-                    log.info("Photo uploadée pour le/la secrétaire {}: {}", secretaireEmail, url);
-                }
-            }
-        });
-    }
+
 
     /**
      * Récupère tous les secrétaires du cabinet de l'admin
