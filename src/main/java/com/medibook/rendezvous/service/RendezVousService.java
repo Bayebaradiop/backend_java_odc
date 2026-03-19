@@ -51,7 +51,7 @@ public class RendezVousService {
 
         // Bloque la prise de RDV si le médecin est indisponible sur ce créneau.
         if (hasBlockingException(creneau)) {
-            throw new IllegalStateException(MessageErreur.CRENEAU_NON_DISPONIBLE);
+            throw new IllegalStateException(MessageErreur.MEDECIN_INDISPONIBLE_CRENEAU);
         }
 
         // Créer le RDV
@@ -84,7 +84,7 @@ public class RendezVousService {
 
         // Vérifier que c'est bien le patient qui annule son RDV
         if (!rdv.getPatient().getId().equals(patient.getId())) {
-            throw new IllegalStateException(MessageErreur.ANNULATION_IMPOSSIBLE);
+            throw new IllegalStateException(MessageErreur.ANNULATION_NON_AUTORISEE);
         }
 
         // Vérifier statut
@@ -196,7 +196,7 @@ public class RendezVousService {
         RendezVous rdv = rendezVousRepository.findById(rdvId)
                 .orElseThrow(() -> new EntityNotFoundException(MessageErreur.RDV_NOT_FOUND));
         if (!rdv.getMedecin().getId().equals(medecin.getId())) {
-            throw new IllegalStateException(MessageErreur.RDV_NOT_FOUND);
+            throw new IllegalStateException(MessageErreur.RDV_NON_ASSIGNE_MEDECIN);
         }
         if (rdv.getStatut() != StatutRdv.EN_ATTENTE) {
             throw new IllegalStateException(MessageErreur.CONFIRMATION_IMPOSSIBLE);
@@ -210,7 +210,7 @@ public class RendezVousService {
         RendezVous rdv = rendezVousRepository.findById(rdvId)
                 .orElseThrow(() -> new EntityNotFoundException(MessageErreur.RDV_NOT_FOUND));
         if (!rdv.getMedecin().getId().equals(medecin.getId())) {
-            throw new IllegalStateException(MessageErreur.RDV_NOT_FOUND);
+            throw new IllegalStateException(MessageErreur.RDV_NON_ASSIGNE_MEDECIN);
         }
         if (rdv.getStatut() != StatutRdv.CONFIRME) {
             throw new IllegalStateException(MessageErreur.TERMINAISON_IMPOSSIBLE);
@@ -237,7 +237,7 @@ public class RendezVousService {
         RendezVous rdv = rendezVousRepository.findById(rdvId)
                 .orElseThrow(() -> new EntityNotFoundException(MessageErreur.RDV_NOT_FOUND));
         if (!rdv.getCabinet().getId().equals(cabinetId)) {
-            throw new IllegalStateException(MessageErreur.RDV_NOT_FOUND);
+            throw new IllegalStateException(MessageErreur.RDV_NON_ASSIGNE_CABINET);
         }
         if (rdv.getStatut() != StatutRdv.EN_ATTENTE) {
             throw new IllegalStateException(MessageErreur.CONFIRMATION_IMPOSSIBLE);
@@ -250,7 +250,7 @@ public class RendezVousService {
         RendezVous rdv = rendezVousRepository.findById(rdvId)
                 .orElseThrow(() -> new EntityNotFoundException(MessageErreur.RDV_NOT_FOUND));
         if (!rdv.getCabinet().getId().equals(cabinetId)) {
-            throw new IllegalStateException(MessageErreur.RDV_NOT_FOUND);
+            throw new IllegalStateException(MessageErreur.RDV_NON_ASSIGNE_CABINET);
         }
         if (rdv.getStatut() == StatutRdv.ANNULE) {
             throw new IllegalStateException(MessageErreur.RDV_DEJA_ANNULE);

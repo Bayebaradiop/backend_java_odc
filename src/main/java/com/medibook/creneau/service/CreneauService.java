@@ -77,7 +77,7 @@ public class CreneauService {
         Creneau creneau = creneauRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(MessageErreur.CRENEAU_NOT_FOUND));
         if (!creneau.getDisponible()) {
-            throw new IllegalStateException(MessageErreur.CRENEAU_NON_DISPONIBLE);
+            throw new IllegalStateException(MessageErreur.CRENEAU_DEJA_RESERVE);
         }
         creneauRepository.delete(creneau);
     }

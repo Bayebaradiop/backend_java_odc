@@ -56,7 +56,7 @@ public class SecretairePlanningController {
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = MessageSucces.PLANNING_CREE),
-            @ApiResponse(responseCode = "400", description = MessageErreur.DONNEES_INVALIDES),
+            @ApiResponse(responseCode = "400", description = MessageErreur.HEURE_INVALIDE),
             @ApiResponse(responseCode = "401", description = MessageErreur.NON_AUTHENTIFIE),
             @ApiResponse(responseCode = "403", description = MessageErreur.ACCES_SECRETAIRE_SPECIALITE)
     })

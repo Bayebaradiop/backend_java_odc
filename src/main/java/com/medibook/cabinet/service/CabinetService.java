@@ -88,7 +88,7 @@ public class CabinetService {
      */
     private Utilisateur validateSuperAdmin(Long userId) {
         Utilisateur user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé"));
+                .orElseThrow(() -> new ResourceNotFoundException(com.medibook.cabinet.message.MessageErreur.CABINET_NON_TROUVE));
 
         if (user.getRole() != Role.SUPER_ADMIN) {
             log.warn("L'utilisateur {} (rôle: {}) a tenté de créer un cabinet sans authorization", 
@@ -172,15 +172,15 @@ public class CabinetService {
         if (dto.adminNom() == null || dto.adminPrenom() == null || 
             dto.adminEmail() == null || dto.adminTelephone() == null || 
             dto.adminPassword() == null) {
-            throw new BusinessException("Les informations de l'administrateur sont incomplètes");
+            throw new BusinessException(MessageErreur.ADMIN_INFO_INCOMPLETE);
         }
 
         if (userRepository.existsByEmail(dto.adminEmail())) {
-            throw new BusinessException("L'email de l'administrateur est déjà utilisé");
+            throw new BusinessException(MessageErreur.ADMIN_EMAIL_DEJA_UTILISE);
         }
 
         if (userRepository.existsByTelephone(dto.adminTelephone())) {
-            throw new BusinessException("Le téléphone de l'administrateur est déjà utilisé");
+            throw new BusinessException(MessageErreur.ADMIN_TELEPHONE_DEJA_UTILISE);
         }
     }
 

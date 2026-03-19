@@ -229,16 +229,16 @@ public class SecretaireService {
      */
     private Utilisateur validateAdminAndGetCabinet(Long userId) {
         Utilisateur user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé"));
+                .orElseThrow(() -> new ResourceNotFoundException(com.medibook.user.message.MessageErreur.UTILISATEUR_NON_TROUVE));
 
         if (user.getRole() != Role.ADMIN) {
             log.warn("L'utilisateur {} (rôle: {}) a tenté d'effectuer une action sans être ADMIN",
                     user.getEmail(), user.getRole());
-            throw new BusinessException("Accès interdit - Réservé aux administrateurs");
+            throw new BusinessException(com.medibook.user.message.MessageErreur.ACCES_ADMIN_SEUL);
         }
 
         if (user.getCabinet() == null) {
-            throw new BusinessException("Vous n'avez pas de cabinet associé");
+            throw new BusinessException(com.medibook.user.message.MessageErreur.PAS_DE_CABINET);
         }
 
         return user;
@@ -249,11 +249,11 @@ public class SecretaireService {
      */
     private void validateSecretaireData(SecretaireRequest request, Long cabinetId) {
         if (userRepository.existsByEmailAndCabinetId(request.email(), cabinetId)) {
-            throw new BusinessException("Cet email est déjà utilisé par un utilisateur de ce cabinet");
+            throw new BusinessException(com.medibook.user.message.MessageErreur.EMAIL_DEJA_UTILISE_CABINET);
         }
 
         if (userRepository.existsByTelephoneAndCabinetId(request.telephone(), cabinetId)) {
-            throw new BusinessException("Ce téléphone est déjà utilisé par un utilisateur de ce cabinet");
+            throw new BusinessException(com.medibook.user.message.MessageErreur.TELEPHONE_DEJA_UTILISE_CABINET);
         }
     }
 
@@ -264,13 +264,13 @@ public class SecretaireService {
         // Vérifier si le nouvel email est déjà utilisé
         if (!currentSecretaire.getEmail().equals(request.email())
                 && userRepository.existsByEmailAndCabinetId(request.email(), cabinetId)) {
-            throw new BusinessException("Cet email est déjà utilisé par un utilisateur de ce cabinet");
+            throw new BusinessException(com.medibook.user.message.MessageErreur.EMAIL_DEJA_UTILISE_CABINET);
         }
 
         // Vérifier si le nouveau téléphone est déjà utilisé
         if (!currentSecretaire.getTelephone().equals(request.telephone())
                 && userRepository.existsByTelephoneAndCabinetId(request.telephone(), cabinetId)) {
-            throw new BusinessException("Ce téléphone est déjà utilisé par un utilisateur de ce cabinet");
+            throw new BusinessException(com.medibook.user.message.MessageErreur.TELEPHONE_DEJA_UTILISE_CABINET);
         }
     }
 
@@ -279,7 +279,7 @@ public class SecretaireService {
      */
     private void validateSecretaireInCabinet(Utilisateur secretaire, Cabinet cabinet) {
         if (secretaire.getCabinet() == null || !secretaire.getCabinet().getId().equals(cabinet.getId())) {
-            throw new BusinessException("Ce/Cette secretary n'appartient pas à votre cabinet");
+            throw new BusinessException(com.medibook.user.message.MessageErreur.SECRETAIRE_HORS_CABINET);
         }
     }
 
@@ -290,7 +290,7 @@ public class SecretaireService {
      */
     private Utilisateur findSecretaireById(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Secrétaire non trouvé"));
+                .orElseThrow(() -> new ResourceNotFoundException(com.medibook.user.message.MessageErreur.SECRETAIRE_NON_TROUVE));
     }
 
     /**
@@ -298,7 +298,7 @@ public class SecretaireService {
      */
     private void validateSpecialiteInCabinet(Specialite specialite, Cabinet cabinet) {
         if (specialite.getCabinet() == null || !specialite.getCabinet().getId().equals(cabinet.getId())) {
-            throw new BusinessException("La spécialité n'appartient pas à votre cabinet");
+            throw new BusinessException(com.medibook.user.message.MessageErreur.SPECIALITE_HORS_CABINET);
         }
     }
 
@@ -307,6 +307,6 @@ public class SecretaireService {
      */
     private Specialite findSpecialiteById(Long id) {
         return specialiteRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Spécialité non trouvée"));
+                .orElseThrow(() -> new ResourceNotFoundException(com.medibook.user.message.MessageErreur.SPECIALITE_NON_TROUVEE));
     }
 }

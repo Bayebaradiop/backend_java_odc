@@ -17,5 +17,7 @@ public final class MessageErreur {
     public static final String ERREUR_SUPPRESSION_LOGO = "Erreur lors de la suppression du logo";
     public static final String ACCES_INTERDIT = "Vous n'avez pas l'autorisation d'effectuer cette action";
     public static final String SEULEMENT_SUPER_ADMIN = "Seul le Super Admin peut créer un cabinet";
-    public static final String VALIDATION_ECHOUEE = "La validation des données a échoué";
+    public static final String ADMIN_INFO_INCOMPLETE = "Les informations de l'administrateur sont incomplètes";
+    public static final String ADMIN_EMAIL_DEJA_UTILISE = "L'email de l'administrateur est déjà utilisé";
+    public static final String ADMIN_TELEPHONE_DEJA_UTILISE = "Le téléphone de l'administrateur est déjà utilisé";
 }

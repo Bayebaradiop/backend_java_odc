@@ -27,11 +27,11 @@ public class AuthService {
     public AuthResult login(LoginRequest request) {
         // 1. Chercher l'utilisateur par email
         Utilisateur user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException(MessageErreur.EMAIL_OU_MDP_INCORRECT));
+                .orElseThrow(() -> new RuntimeException(MessageErreur.EMAIL_NON_TROUVE));
 
         // 2. Vérifier le mot de passe
         if (!passwordEncoder.matches(request.getMotDePasse(), user.getMotDePasse())) {
-            throw new RuntimeException(MessageErreur.EMAIL_OU_MDP_INCORRECT);
+            throw new RuntimeException(MessageErreur.MDP_INCORRECT);
         }
 
         // 3. Vérifier que le compte est actif

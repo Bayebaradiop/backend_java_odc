@@ -49,7 +49,7 @@ public class MedecinExceptionController {
     @Operation(summary = "Créer une exception de planning", description = "Crée une exception de planning pour le médecin connecté (indisponibilité, congé, etc.)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = MessageSucces.EXCEPTION_CREEE),
-            @ApiResponse(responseCode = "400", description = MessageErreur.DONNEES_INVALIDES),
+            @ApiResponse(responseCode = "400", description = MessageErreur.HEURE_INVALIDE),
             @ApiResponse(responseCode = "401", description = MessageErreur.NON_AUTHENTIFIE),
             @ApiResponse(responseCode = "403", description = MessageErreur.ACCES_MEDECIN_SEUL)
     })
