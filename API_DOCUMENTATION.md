@@ -274,7 +274,23 @@ dto (JSON) :
 {
   "nom": "Cabinet Médical Nord",
   "adresse": "78 Boulevard du Nord, Saint-Louis",
-  "telephone": "+221339876543",
+  "telephone": "+221339876543",Le module ExceptionsPlanning est implemente (entity, repository, DTOs, mapper, messages, service, controllers).
+Le blocage de prise de RDV en cas d’exception planning est ajoute dans RendezVousService.java.
+Compilation complete reussie avec mvn clean compile (BUILD SUCCESS).
+Fichiers principaux verifies:
+
+ExceptionsPlanning.java
+ExceptionsPlanningRepository.java
+ExceptionService.java
+MedecinExceptionController.java
+SecretaireExceptionController.java
+RendezVousService.java
+Note:
+
+Il reste des warnings Maven existants (Lombok/pom), mais ce ne sont pas des erreurs bloquantes pour cette fonctionnalite.
+Si tu veux, je peux maintenant faire un test API rapide des endpoints (create/list/delete exception + tentative de prise RDV sur creneau bloque) pour valider le comportement fonctionnel bout en bout.
+
+
   "email": "nord@medibook.com",
   "couleurPrimaire": "#dc3545",
   "couleurSecondaire": "#ffffff",
