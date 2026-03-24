@@ -47,6 +47,21 @@ public class StatsService {
                 .build();
     }
 
+    public StatsResponse getSecretaireStats(Utilisateur secretaire) {
+        Long cabinetId = secretaire.getCabinet().getId();
+        String cabinetNom = secretaire.getCabinet().getNom();
+        return StatsResponse.builder()
+                .cabinetNom(cabinetNom)
+                .totalMedecins(userRepository.countByRoleAndCabinetId(Role.MEDECIN, cabinetId))
+                .totalPatients(rendezVousRepository.countDistinctPatientsByCabinetId(cabinetId))
+                .totalRdv(rendezVousRepository.countByCabinetId(cabinetId))
+                .rdvEnAttente(rendezVousRepository.countByCabinetIdAndStatut(cabinetId, StatutRdv.EN_ATTENTE))
+                .rdvConfirmes(rendezVousRepository.countByCabinetIdAndStatut(cabinetId, StatutRdv.CONFIRME))
+                .rdvTermines(rendezVousRepository.countByCabinetIdAndStatut(cabinetId, StatutRdv.TERMINE))
+                .rdvAnnules(rendezVousRepository.countByCabinetIdAndStatut(cabinetId, StatutRdv.ANNULE))
+                .build();
+    }
+
     public StatsResponse getSuperAdminStats() {
         return StatsResponse.builder()
                 .totalCabinets(cabinetRepository.count())
