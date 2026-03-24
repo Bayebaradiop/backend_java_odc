@@ -110,7 +110,7 @@ Pour Swagger, utilisez le bouton **Authorize** 🔒 et collez : `Bearer <votre_t
 
 ```json
 {
-  "email": "marie.sarr@medibook.com",
+    "email": "marie.sarr@medibook.com",
   "motDePasse": "123456"
 }
 ```

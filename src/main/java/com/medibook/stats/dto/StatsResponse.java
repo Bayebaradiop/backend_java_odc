@@ -12,6 +12,7 @@ public record StatsResponse(
     Long rdvAnnules,
     Long totalPatients,
     // Stats admin / super admin
+    String cabinetNom,
     Long totalMedecins,
     Long totalSecretaires,
     Long totalCabinets

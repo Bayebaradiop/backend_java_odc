@@ -5,8 +5,6 @@ import com.medibook.common.event.SecretaireCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -18,7 +16,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class EmailService {
 
-    private final JavaMailSender mailSender;
+    private final BrevoMailService brevoMailService;
 
     @Value("${app.front-url:https://app.medibook.com}")
     private String frontUrl;
@@ -29,16 +27,14 @@ public class EmailService {
     @Async
     public void sendMedecinCreationEmail(MedecinCreatedEvent event) {
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(event.getMedecin().getEmail());
-            message.setSubject("Bienvenue sur MediBook");
-            message.setText(buildMedecinWelcomeEmail(event));
-
-            mailSender.send(message);
+            brevoMailService.sendEmail(
+                    event.getMedecin().getEmail(),
+                    "Bienvenue sur MediBook",
+                    buildMedecinWelcomeEmail(event)
+            );
             log.info("Email de création de compte envoyé à {}", event.getMedecin().getEmail());
         } catch (Exception e) {
             log.error("Échec de l'envoi de l'email à {}: {}", event.getMedecin().getEmail(), e.getMessage());
-            // On ne lance pas d'exception pour ne pas bloquer la création du médecin
         }
     }
 
@@ -48,12 +44,11 @@ public class EmailService {
     @Async
     public void sendSecretaireCreationEmail(SecretaireCreatedEvent event) {
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(event.getSecretaire().getEmail());
-            message.setSubject("Bienvenue sur MediBook");
-            message.setText(buildSecretaireWelcomeEmail(event));
-
-            mailSender.send(message);
+            brevoMailService.sendEmail(
+                    event.getSecretaire().getEmail(),
+                    "Bienvenue sur MediBook",
+                    buildSecretaireWelcomeEmail(event)
+            );
             log.info("Email de création de compte envoyé à {}", event.getSecretaire().getEmail());
         } catch (Exception e) {
             log.error("Échec de l'envoi de l'email à {}: {}", event.getSecretaire().getEmail(), e.getMessage());

@@ -1,10 +1,15 @@
 package com.medibook.user.controller;
 
+import com.medibook.cabinet.dto.CabinetResponseDTO;
+import com.medibook.cabinet.entity.Cabinet;
+import com.medibook.cabinet.mapper.CabinetMapper;
 import com.medibook.common.dto.ApiStandardResponse;
 import com.medibook.common.security.JwtUserUtil;
 import com.medibook.user.dto.MedecinRequest;
 import com.medibook.user.dto.SecretaireRequest;
 import com.medibook.user.dto.UserResponse;
+import com.medibook.user.entity.Utilisateur;
+import com.medibook.user.repository.UserRepository;
 import com.medibook.user.service.MedecinService;
 import com.medibook.user.service.SecretaireService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,6 +41,25 @@ public class AdminController {
     private final MedecinService medecinService;
     private final SecretaireService secretaireService;
     private final JwtUserUtil jwtUserUtil;
+    private final UserRepository userRepository;
+    private final CabinetMapper cabinetMapper;
+
+    // ==================== MON CABINET ====================
+
+    @Operation(summary = "Mon cabinet", description = "Retourne les informations du cabinet de l'admin connecté")
+    @GetMapping("/mon-cabinet")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> getMonCabinet() {
+        Long userId = jwtUserUtil.getCurrentUserId();
+        Utilisateur admin = userRepository.findByIdWithCabinetAndSpecialite(userId)
+                .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+        Cabinet cabinet = admin.getCabinet();
+        if (cabinet == null) {
+            return ResponseEntity.notFound().build();
+        }
+        CabinetResponseDTO dto = cabinetMapper.toResponseDTO(cabinet);
+        return ResponseEntity.ok(dto);
+    }
 
     // ==================== MÉDECINS ====================
 

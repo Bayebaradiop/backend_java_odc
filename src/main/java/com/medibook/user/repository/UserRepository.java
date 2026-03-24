@@ -45,6 +45,9 @@ public interface UserRepository extends JpaRepository<Utilisateur, Long> {
     @Query("SELECT u FROM Utilisateur u LEFT JOIN FETCH u.cabinet LEFT JOIN FETCH u.specialite WHERE u.id = :id")
     Optional<Utilisateur> findByIdWithCabinetAndSpecialite(@Param("id") Long id);
 
+    @Query("SELECT u FROM Utilisateur u LEFT JOIN FETCH u.cabinet LEFT JOIN FETCH u.specialite WHERE u.email = :email")
+    Optional<Utilisateur> findByEmailWithCabinetAndSpecialite(@Param("email") String email);
+
     // Comptages pour stats
     long countByRoleAndCabinetId(Role role, Long cabinetId);
     long countByRole(Role role);

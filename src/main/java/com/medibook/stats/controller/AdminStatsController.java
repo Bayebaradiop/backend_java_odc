@@ -35,7 +35,7 @@ public class AdminStatsController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiStandardResponse<StatsResponse>> getStatsCabinet() {
         Utilisateur admin = securityService.getUtilisateurConnecte();
-        StatsResponse stats = statsService.getAdminStats(admin.getCabinet().getId());
+        StatsResponse stats = statsService.getAdminStats(admin);
         return ResponseEntity.ok(ApiStandardResponse.success(stats, MessageSucces.STATS_ADMIN_RECUPEREES));
     }
 }

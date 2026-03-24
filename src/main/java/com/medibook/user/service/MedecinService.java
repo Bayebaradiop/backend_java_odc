@@ -86,39 +86,49 @@ public class MedecinService {
     }
 
     /**
-     * Gère la photo lors de la création - upload vers Cloudinary
+     * Gère la photo lors de la création - upload asynchrone vers Cloudinary
      */
     private void handlePhotoCreation(Utilisateur medecin, MultipartFile photoFile) {
         if (photoFile != null && !photoFile.isEmpty()) {
             String folder = "medibook/medecins/" + medecin.getId();
-            String url = mediaUploadService.uploadImage(photoFile, folder);
-            medecin.setPhoto(url);
-            userRepository.save(medecin);
-            log.info("Photo uploadée pour le médecin {}: {}", medecin.getEmail(), url);
+            final Long userId = medecin.getId();
+            mediaUploadService.uploadImageAsync(photoFile, folder, url -> {
+                if (url != null) {
+                    userRepository.findById(userId).ifPresent(user -> {
+                        user.setPhoto(url);
+                        userRepository.save(user);
+                        log.info("Photo uploadée (async) pour le médecin {}: {}", user.getEmail(), url);
+                    });
+                }
+            });
         }
     }
 
     /**
      * Gère la photo lors de la mise à jour:
-     * - Si nouveau fichier → upload + supprime l'ancienne
+     * - Si nouveau fichier → upload async + supprime l'ancienne
      * - Si rien de nouveau → conserve l'ancienne
      */
     private void handlePhoto(Utilisateur medecin, MultipartFile photoFile) {
-        // Récupérer l'ancienne photo pour UPDATE
-        String oldPhoto = medecin.getPhoto();
-        
         if (photoFile != null && !photoFile.isEmpty()) {
             // Supprimer l'ancienne photo si elle existe
+            String oldPhoto = medecin.getPhoto();
             if (oldPhoto != null && !oldPhoto.isEmpty()) {
                 mediaUploadService.deleteImageAsync(oldPhoto);
             }
-            // Upload le nouveau fichier de manière synchrone
+            // Upload asynchrone
             String folder = "medibook/medecins/" + medecin.getId();
-            String url = mediaUploadService.uploadImage(photoFile, folder);
-            medecin.setPhoto(url);
-            log.info("Photo uploadée pour le médecin {}: {}", medecin.getEmail(), url);
+            final Long userId = medecin.getId();
+            mediaUploadService.uploadImageAsync(photoFile, folder, url -> {
+                if (url != null) {
+                    userRepository.findById(userId).ifPresent(user -> {
+                        user.setPhoto(url);
+                        userRepository.save(user);
+                        log.info("Photo mise à jour (async) pour le médecin {}: {}", user.getEmail(), url);
+                    });
+                }
+            });
         }
-        // Si pas de nouveau fichier → conserver l'ancienne photo (pas de changement)
     }
 
     /**
@@ -144,15 +154,23 @@ public class MedecinService {
             throw new BusinessException(com.medibook.user.message.MessageErreur.ACCES_SECRETAIRE_SEUL);
         }
 
-        if (secretaire.getCabinet() == null || secretaire.getSpecialite() == null) {
+        if (secretaire.getCabinet() == null) {
             throw new BusinessException(com.medibook.user.message.MessageErreur.SECRETAIRE_SANS_CABINET_OU_SPECIALITE);
         }
 
-        List<Utilisateur> medecins = userRepository.findByRoleAndCabinetIdAndSpecialiteId(
-                Role.MEDECIN,
-                secretaire.getCabinet().getId(),
-                secretaire.getSpecialite().getId()
-        );
+        List<Utilisateur> medecins;
+        if (secretaire.getSpecialite() != null) {
+            medecins = userRepository.findByRoleAndCabinetIdAndSpecialiteId(
+                    Role.MEDECIN,
+                    secretaire.getCabinet().getId(),
+                    secretaire.getSpecialite().getId()
+            );
+        } else {
+            medecins = userRepository.findByRoleAndCabinetId(
+                    Role.MEDECIN,
+                    secretaire.getCabinet().getId()
+            );
+        }
 
         return medecins.stream().map(userMapper::toResponse).toList();
     }

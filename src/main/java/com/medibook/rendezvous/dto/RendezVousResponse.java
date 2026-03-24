@@ -22,6 +22,11 @@ public record RendezVousResponse(
     String medecinPrenom,
     String medecinSpecialite,
     String medecinPhoto,
+    // Infos patient
+    Long patientId,
+    String patientNom,
+    String patientPrenom,
+    String patientTelephone,
     // Infos cabinet
     Long cabinetId,
     String cabinetNom,

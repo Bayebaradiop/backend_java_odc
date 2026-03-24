@@ -5,6 +5,7 @@ import com.medibook.common.enums.Role;
 import com.medibook.common.enums.StatutRdv;
 import com.medibook.rendezvous.repository.RendezVousRepository;
 import com.medibook.stats.dto.StatsResponse;
+import com.medibook.user.entity.Utilisateur;
 import com.medibook.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,8 +31,11 @@ public class StatsService {
                 .build();
     }
 
-    public StatsResponse getAdminStats(Long cabinetId) {
+    public StatsResponse getAdminStats(Utilisateur admin) {
+        Long cabinetId = admin.getCabinet().getId();
+        String cabinetNom = admin.getCabinet().getNom();
         return StatsResponse.builder()
+                .cabinetNom(cabinetNom)
                 .totalMedecins(userRepository.countByRoleAndCabinetId(Role.MEDECIN, cabinetId))
                 .totalSecretaires(userRepository.countByRoleAndCabinetId(Role.SECRETAIRE, cabinetId))
                 .totalPatients(rendezVousRepository.countDistinctPatientsByCabinetId(cabinetId))

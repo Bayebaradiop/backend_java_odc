@@ -1,12 +1,11 @@
 package com.medibook.auth.service;
 
 import com.medibook.auth.message.MessageErreur;
+import com.medibook.common.service.BrevoMailService;
 import com.medibook.user.entity.Utilisateur;
 import com.medibook.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PasswordResetService {
 
     private final UserRepository userRepository;
-    private final JavaMailSender mailSender;
+    private final BrevoMailService brevoMailService;
     private final PasswordEncoder passwordEncoder;
 
     private record ResetCode(String code, Instant expiration) {}
@@ -39,14 +38,11 @@ public class PasswordResetService {
         resetCodes.put(email, new ResetCode(code, Instant.now().plusSeconds(CODE_EXPIRATION_MINUTES * 60L)));
 
         try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo(email);
-            message.setSubject("MediBook - Code de réinitialisation");
-            message.setText("Bonjour " + user.getPrenom() + ",\n\n"
+            String textContent = "Bonjour " + user.getPrenom() + ",\n\n"
                     + "Votre code de réinitialisation est : " + code + "\n\n"
                     + "Ce code expire dans " + CODE_EXPIRATION_MINUTES + " minutes.\n\n"
-                    + "L'équipe MediBook");
-            mailSender.send(message);
+                    + "L'équipe MediBook";
+            brevoMailService.sendEmail(email, "MediBook - Code de réinitialisation", textContent);
             log.info("Code de réinitialisation envoyé à {}", email);
         } catch (Exception e) {
             log.error("Échec de l'envoi du code à {}: {}", email, e.getMessage());

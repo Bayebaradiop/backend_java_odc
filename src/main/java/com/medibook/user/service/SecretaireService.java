@@ -7,8 +7,6 @@ import com.medibook.common.event.SecretaireCreatedEvent;
 import com.medibook.common.exception.BusinessException;
 import com.medibook.common.exception.ResourceNotFoundException;
 import com.medibook.common.storage.MediaUploadService;
-import com.medibook.specialite.entity.Specialite;
-import com.medibook.specialite.repository.SpecialiteRepository;
 import com.medibook.user.dto.SecretaireRequest;
 import com.medibook.user.dto.UserResponse;
 import com.medibook.user.entity.Utilisateur;
@@ -34,7 +32,6 @@ import java.util.List;
 public class SecretaireService {
 
     private final UserRepository userRepository;
-    private final SpecialiteRepository specialiteRepository;
     private final UserMapper userMapper;
     private final MediaUploadService mediaUploadService;
     private final PasswordEncoder passwordEncoder;
@@ -49,19 +46,12 @@ public class SecretaireService {
         // 1. Valider que l'utilisateur est ADMIN et récupérer son cabinet
         Utilisateur admin = validateAdminAndGetCabinet(adminId);
 
-        // 2. Valider les données du secretary
+        // 2. Valider les données du secrétaire
         validateSecretaireData(request, admin.getCabinet().getId());
 
-        // 3. Récupérer la spécialité
-        Specialite specialite = findSpecialiteById(request.specialiteId());
-
-        // 4. Valider que la spécialité appartient au cabinet
-        validateSpecialiteInCabinet(specialite, admin.getCabinet());
-
-        // 5. Créer le secretary
+        // 3. Créer le secrétaire
         Utilisateur secretaire = userMapper.toEntityFromSecretaire(request);
         secretaire.setCabinet(admin.getCabinet());
-        secretaire.setSpecialite(specialite);
         secretaire.setRole(Role.SECRETAIRE);
         secretaire.setStatus(Status.ACTIF);
         secretaire.setMotDePasse(passwordEncoder.encode(request.motDePasse()));
@@ -85,39 +75,49 @@ public class SecretaireService {
     }
 
     /**
-     * Gère la photo lors de la création - upload vers Cloudinary
+     * Gère la photo lors de la création - upload asynchrone vers Cloudinary
      */
     private void handlePhotoCreation(Utilisateur secretaire, MultipartFile photoFile) {
         if (photoFile != null && !photoFile.isEmpty()) {
             String folder = "medibook/secretaires/" + secretaire.getId();
-            String url = mediaUploadService.uploadImage(photoFile, folder);
-            secretaire.setPhoto(url);
-            userRepository.save(secretaire);
-            log.info("Photo uploadée pour le/la secrétaire {}: {}", secretaire.getEmail(), url);
+            final Long userId = secretaire.getId();
+            mediaUploadService.uploadImageAsync(photoFile, folder, url -> {
+                if (url != null) {
+                    userRepository.findById(userId).ifPresent(user -> {
+                        user.setPhoto(url);
+                        userRepository.save(user);
+                        log.info("Photo uploadée (async) pour le/la secrétaire {}: {}", user.getEmail(), url);
+                    });
+                }
+            });
         }
     }
 
     /**
      * Gère la photo lors de la mise à jour:
-     * - Si nouveau fichier → upload + supprime l'ancienne
+     * - Si nouveau fichier → upload async + supprime l'ancienne
      * - Si rien de nouveau → conserve l'ancienne
      */
     private void handlePhoto(Utilisateur secretaire, MultipartFile photoFile) {
-        // Récupérer l'ancienne photo pour UPDATE
-        String oldPhoto = secretaire.getPhoto();
-        
         if (photoFile != null && !photoFile.isEmpty()) {
             // Supprimer l'ancienne photo si elle existe
+            String oldPhoto = secretaire.getPhoto();
             if (oldPhoto != null && !oldPhoto.isEmpty()) {
                 mediaUploadService.deleteImageAsync(oldPhoto);
             }
-            // Upload le nouveau fichier de manière synchrone
+            // Upload asynchrone
             String folder = "medibook/secretaires/" + secretaire.getId();
-            String url = mediaUploadService.uploadImage(photoFile, folder);
-            secretaire.setPhoto(url);
-            log.info("Photo uploadée pour le/la secrétaire {}: {}", secretaire.getEmail(), url);
+            final Long userId = secretaire.getId();
+            mediaUploadService.uploadImageAsync(photoFile, folder, url -> {
+                if (url != null) {
+                    userRepository.findById(userId).ifPresent(user -> {
+                        user.setPhoto(url);
+                        userRepository.save(user);
+                        log.info("Photo mise à jour (async) pour le/la secrétaire {}: {}", user.getEmail(), url);
+                    });
+                }
+            });
         }
-        // Si pas de nouveau fichier → conserver l'ancienne photo (pas de changement)
     }
 
     /**
@@ -293,20 +293,4 @@ public class SecretaireService {
                 .orElseThrow(() -> new ResourceNotFoundException(com.medibook.user.message.MessageErreur.SECRETAIRE_NON_TROUVE));
     }
 
-    /**
-     * Valide que la spécialité appartient au cabinet
-     */
-    private void validateSpecialiteInCabinet(Specialite specialite, Cabinet cabinet) {
-        if (specialite.getCabinet() == null || !specialite.getCabinet().getId().equals(cabinet.getId())) {
-            throw new BusinessException(com.medibook.user.message.MessageErreur.SPECIALITE_HORS_CABINET);
-        }
-    }
-
-    /**
-     * Trouve une spécialité par ID
-     */
-    private Specialite findSpecialiteById(Long id) {
-        return specialiteRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(com.medibook.user.message.MessageErreur.SPECIALITE_NON_TROUVEE));
-    }
 }

@@ -20,6 +20,7 @@ public class RendezVousMapper {
         
         Creneau creneau = rdv.getCreneau();
         Utilisateur medecin = rdv.getMedecin();
+        Utilisateur patient = rdv.getPatient();
 
         return RendezVousResponse.builder()
                 .id(rdv.getId())
@@ -36,6 +37,11 @@ public class RendezVousMapper {
                 .medecinSpecialite(medecin != null && medecin.getSpecialite() != null 
                         ? medecin.getSpecialite().getNom() : null)
                 .medecinPhoto(medecin != null ? medecin.getPhoto() : null)
+                // Infos patient
+                .patientId(patient != null ? patient.getId() : null)
+                .patientNom(patient != null ? patient.getNom() : null)
+                .patientPrenom(patient != null ? patient.getPrenom() : null)
+                .patientTelephone(patient != null ? patient.getTelephone() : null)
                 // Infos cabinet
                 .cabinetId(rdv.getCabinet() != null ? rdv.getCabinet().getId() : null)
                 .cabinetNom(rdv.getCabinet() != null ? rdv.getCabinet().getNom() : null)

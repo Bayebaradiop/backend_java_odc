@@ -26,7 +26,7 @@ public class SecurityService {
      */
     public Utilisateur getUtilisateurConnecte() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByEmail(email)
+        return userRepository.findByEmailWithCabinetAndSpecialite(email)
                 .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND));
     }
 
