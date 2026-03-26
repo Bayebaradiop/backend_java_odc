@@ -1,6 +1,6 @@
 package com.medibook.ExceptionsPlanning.repository;
 
-import com.medibook.ExceptionsPlanning.entity.ExceptionPlanning;
+import com.medibook.ExceptionsPlanning.entity.ExceptionsPlanning;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Repository
-public interface ExceptionsPlanningRepository extends JpaRepository<ExceptionPlanning, Long> {
+public interface ExceptionsPlanningRepository extends JpaRepository<ExceptionsPlanning, Long> {
 
     List<ExceptionsPlanning> findByMedecinId(Long medecinId);
 
