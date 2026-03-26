@@ -76,18 +76,26 @@ public class PlanningService {
     }
 
     /**
-     * Valide que l'utilisateur est un secretary avec une spécialité
+     * Supprime un planning par son ID
+     */
+    @Transactional
+    public void deletePlanning(Long planningId) {
+        if (!planningRepository.existsById(planningId)) {
+            throw new ResourceNotFoundException(MessageErreur.PLANNING_NON_TROUVE);
+        }
+        planningRepository.deleteById(planningId);
+        log.info("Planning {} supprimé", planningId);
+    }
+
+    /**
+     * Valide que l'utilisateur est un secrétaire
      */
     private Utilisateur validateAndGetSecretaire(Long secretaireId) {
-        Utilisateur secretaire = userRepository.findById(secretaireId)
+        Utilisateur secretaire = userRepository.findByIdWithCabinetAndSpecialite(secretaireId)
                 .orElseThrow(() -> new ResourceNotFoundException(MessageErreur.UTILISATEUR_NON_TROUVE));
 
         if (secretaire.getRole() != com.medibook.common.enums.Role.SECRETAIRE) {
             throw new BusinessException(MessageErreur.ACCES_SECRETAIRE_SEUL);
-        }
-
-        if (secretaire.getSpecialite() == null) {
-            throw new BusinessException(MessageErreur.SPECIALITE_SECRETAIRE_OBLIGATOIRE);
         }
 
         return secretaire;
@@ -97,7 +105,7 @@ public class PlanningService {
      * Valide que le médecin existe
      */
     private Utilisateur validateAndGetMedecin(Long medecinId) {
-        return userRepository.findById(medecinId)
+        return userRepository.findByIdWithCabinetAndSpecialite(medecinId)
                 .orElseThrow(() -> new ResourceNotFoundException(MessageErreur.MEDECIN_NON_TROUVE));
     }
 
@@ -108,12 +116,6 @@ public class PlanningService {
         // Valider que le médecin est dans le même cabinet
         if (!medecin.getCabinet().getId().equals(secretaire.getCabinet().getId())) {
             throw new BusinessException(MessageErreur.MEDECIN_MEME_CABINET);
-        }
-
-        // Valider que le médecin a la même spécialité que le secretary
-        if (medecin.getSpecialite() == null ||
-            !medecin.getSpecialite().getId().equals(secretaire.getSpecialite().getId())) {
-            throw new BusinessException(MessageErreur.MEDECIN_MEME_SPECIALITE);
         }
     }
 

@@ -1,10 +1,12 @@
 package com.medibook.specialite.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Builder;
 
 /**
  * DTO pour la réponse d'une spécialité
  */
+@Builder
 @Schema(description = "Réponse d'une spécialité")
 public record SpecialiteResponse(
         @Schema(description = "ID de la spécialité", example = "1")

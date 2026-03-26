@@ -16,19 +16,26 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@RestControllerAdvice
+import jakarta.persistence.EntityNotFoundException;
+
 @Slf4j
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // ==================== Codes d'erreur ====================
     private static final String ERR_NOT_FOUND = "ERR_NOT_FOUND";
-    private static final String ERR_UNAUTHORIZED = "ERR_UNAUTHORIZED";
     private static final String ERR_FORBIDDEN = "ERR_FORBIDDEN";
     private static final String ERR_VALIDATION = "ERR_VALIDATION";
     private static final String ERR_BUSINESS = "ERR_BUSINESS";
     private static final String ERR_FILE_TOO_LARGE = "ERR_FILE_TOO_LARGE";
     private static final String ERR_INTERNAL = "ERR_INTERNAL";
     private static final String ERR_MISSING_PARAM = "ERR_MISSING_PARAM";
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ApiStandardResponse<?>> handleEntityNotFound(EntityNotFoundException ex) {
+        log.warn("Entity not found: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiStandardResponse.error(ex.getMessage(), ERR_NOT_FOUND));
+    }
 
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ApiStandardResponse<?>> handleNoResourceFoundException(NoResourceFoundException ex) {
@@ -92,14 +99,12 @@ public class GlobalExceptionHandler {
         String message = ex.getMessage();
         String userFriendlyMessage = "Une erreur de données est survenue";
         
-        // Analyser le message d'erreur pour fournir un message plus clair
         if (message != null) {
             if (message.contains("utilisateurs_telephone_key") || message.contains("telephone")) {
                 userFriendlyMessage = "Ce numéro de téléphone est déjà utilisé par un autre utilisateur";
             } else if (message.contains("utilisateurs_email_key") || message.contains("email")) {
                 userFriendlyMessage = "Cette adresse email est déjà utilisée par un autre utilisateur";
             } else if (message.contains("duplicate key")) {
-                // Essayer d'extraire le champ responsable
                 Pattern pattern = Pattern.compile("Key \\((.*?)\\)=");
                 Matcher matcher = pattern.matcher(message);
                 if (matcher.find()) {

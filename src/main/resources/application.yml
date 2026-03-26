@@ -3,12 +3,12 @@ spring:
     name: medibook-api
   profiles:
     active: dev
-
+  
   # Base de données
   datasource:
-    url: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
+    url: jdbc:postgresql://localhost:5432/medibook2
+    username: postgres
+    password: passer
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -23,16 +23,8 @@ spring:
     baseline-on-migrate: true
 
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: ${MAIL_USERNAME}
-    password: ${MAIL_PASSWORD}
-    properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
+    host: localhost
+    port: 25
 
   # Configuration upload de fichiers
   servlet:
@@ -43,8 +35,6 @@ spring:
 
 server:
   port: ${SERVER_PORT:8085}
-
-
 
 springdoc:
   api-docs:
@@ -65,7 +55,10 @@ cloudinary:
   api-key: ${CLOUDINARY_API_KEY}
   api-secret: ${CLOUDINARY_API_SECRET}
 
-
+brevo:
+  api-key: ${BREVO_API_KEY}
+  sender-email: ${BREVO_SENDER_EMAIL:bayebara2000@gmail.com}
+  sender-name: ${BREVO_SENDER_NAME:MediBook}
 
 app:
   front-url: https://app.medibook.com

@@ -31,7 +31,7 @@ import java.util.Map;
  * Contrôleur pour la gestion des cabinets
  */
 @RestController
-@RequestMapping("/api/admin/cabinets")
+@RequestMapping("/api/super-admin/cabinets")
 @RequiredArgsConstructor
 @Tag(name = "Cabinets", description = "API de gestion des cabinets médicaux")
 @Slf4j
@@ -59,7 +59,7 @@ public class CabinetController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiStandardResponse<CabinetResponseDTO>> createCabinet(
-            @Valid @ModelAttribute CabinetCreateDTO dto,
+            @Valid @RequestPart("dto") CabinetCreateDTO dto,
             @Parameter(description = "Logo du cabinet")
             @RequestPart(value = "logo", required = false) MultipartFile logo) {
         
@@ -80,17 +80,17 @@ public class CabinetController {
 
     @Operation(summary = "Récupérer un cabinet par ID", description = "Retourne un cabinet spécifique")
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<CabinetResponseDTO> getCabinetById(@PathVariable Long id) {
         return ResponseEntity.ok(cabinetService.getCabinetById(id));
     }
 
     @Operation(summary = "Mettre à jour un cabinet", description = "Met à jour un cabinet existant. Réservé au Super Admin.")
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiStandardResponse<CabinetResponseDTO>> updateCabinet(
             @PathVariable Long id,
-            @Valid @ModelAttribute CabinetCreateDTO dto,
+            @Valid @RequestPart("dto") CabinetCreateDTO dto,
             @Parameter(description = "Logo du cabinet")
             @RequestPart(value = "logo", required = false) MultipartFile logo) {
         
@@ -101,6 +101,7 @@ public class CabinetController {
 
     @Operation(summary = "Supprimer un cabinet", description = "Supprime un cabinet. Réservé au Super Admin.")
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<Map<String, String>> deleteCabinet(@PathVariable Long id) {
         Long userId = jwtUserUtil.getCurrentUserId();
         if (userId == null) {
@@ -113,6 +114,7 @@ public class CabinetController {
 
     @Operation(summary = "Activer/Désactiver un cabinet", description = "Bascule le statut d'un cabinet. Réservé au Super Admin.")
     @PatchMapping("/{id}/toggle-status")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<CabinetResponseDTO> toggleCabinetStatus(@PathVariable Long id) {
         Long userId = jwtUserUtil.getCurrentUserId();
         if (userId == null) {
@@ -124,7 +126,8 @@ public class CabinetController {
     }
 
     @Operation(summary = "Mettre à jour le logo", description = "Met à jour le logo d'un cabinet. Réservé au Super Admin.")
-    @PatchMapping("/{id}/logo")
+    @PatchMapping(value = "/{id}/logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<CabinetResponseDTO> updateLogo(
             @PathVariable Long id,
             @RequestParam("logo") MultipartFile logo) {

@@ -1,4 +1,19 @@
 package com.medibook.stats.dto;
 
-public class StatsResponse {
-}
+import lombok.Builder;
+
+@Builder
+public record StatsResponse(
+    // Stats médecin
+    Long totalRdv,
+    Long rdvEnAttente,
+    Long rdvConfirmes,
+    Long rdvTermines,
+    Long rdvAnnules,
+    Long totalPatients,
+    // Stats admin / super admin
+    String cabinetNom,
+    Long totalMedecins,
+    Long totalSecretaires,
+    Long totalCabinets
+) {}

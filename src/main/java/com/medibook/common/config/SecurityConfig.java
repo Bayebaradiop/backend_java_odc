@@ -2,6 +2,7 @@ package com.medibook.common.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -25,10 +26,13 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            .cors(cors -> {})
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // Preflight CORS
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 // Routes publiques
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/swagger-ui/**").permitAll()
@@ -43,6 +47,7 @@ public class SecurityConfig {
                 .requestMatchers("/").permitAll()
 
                 // Routes par rôle
+                .requestMatchers("/api/super-admin/**").hasRole("SUPER_ADMIN")
                 .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 .requestMatchers("/api/medecin/**").hasRole("MEDECIN")
                 .requestMatchers("/api/secretaire/**").hasRole("SECRETAIRE")

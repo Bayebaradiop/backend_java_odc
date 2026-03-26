@@ -4,6 +4,8 @@ import com.medibook.cabinet.entity.Cabinet;
 import com.medibook.cabinet.repository.CabinetRepository;
 import com.medibook.common.enums.Role;
 import com.medibook.common.enums.StatutRdv;
+import com.medibook.creneau.entity.Creneau;
+import com.medibook.creneau.repository.CreneauRepository;
 import com.medibook.rendezvous.entity.RendezVous;
 import com.medibook.rendezvous.repository.RendezVousRepository;
 import com.medibook.user.entity.Utilisateur;
@@ -11,9 +13,12 @@ import com.medibook.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -23,6 +28,47 @@ public class RendezVousSeeder implements Seeder {
     private final RendezVousRepository rendezVousRepository;
     private final UserRepository userRepository;
     private final CabinetRepository cabinetRepository;
+    private final CreneauRepository creneauRepository;
+
+    private static final String[] MOTIFS = {
+        "Consultation de contrôle - Tension artérielle",
+        "Première consultation - Douleurs abdominales",
+        "Suivi traitement - Diabète type 2",
+        "Consultation générale - Fièvre et fatigue",
+        "Bilan de santé annuel",
+        "Douleurs thoraciques - Avis cardiologique",
+        "Consultation pédiatrique - Vaccination",
+        "Contrôle de la vue - Renouvellement lunettes",
+        "Consultation dermatologique - Éruption cutanée",
+        "Suivi grossesse - 3ème trimestre",
+        "Mal de dos chronique - Consultation orthopédique",
+        "Consultation ORL - Otite récidivante",
+        "Bilan sanguin - Contrôle cholestérol",
+        "Consultation gynécologique - Contrôle annuel",
+        "Migraine persistante - Avis neurologique",
+        "Allergies saisonnières - Traitement",
+        "Suivi post-opératoire - Contrôle cicatrisation",
+        "Consultation urgente - Douleur aiguë genou",
+        "Renouvellement ordonnance - Traitement hypertension",
+        "Consultation nutritionnelle - Perte de poids",
+        "Toux persistante - Bilan pulmonaire",
+        "Consultation prénatale - Échographie",
+        "Douleur dentaire irradiée - Orientation",
+        "Insomnie chronique - Consultation sommeil",
+        "Contrôle glycémie - Ajustement traitement",
+        "Étourdissements fréquents - Bilan vestibulaire",
+        "Suivi psychologique - Anxiété",
+        "Vaccination rappel - Tétanos",
+        "Examen cutané - Grain de beauté suspect",
+        "Consultation sport - Certificat médical"
+    };
+
+    private static final StatutRdv[] STATUTS_MIX = {
+        StatutRdv.TERMINE, StatutRdv.TERMINE, StatutRdv.TERMINE,
+        StatutRdv.CONFIRME, StatutRdv.CONFIRME, StatutRdv.CONFIRME,
+        StatutRdv.EN_ATTENTE, StatutRdv.EN_ATTENTE, StatutRdv.EN_ATTENTE, StatutRdv.EN_ATTENTE,
+        StatutRdv.ANNULE, StatutRdv.ANNULE
+    };
 
     @Override
     public String getName() {
@@ -31,7 +77,7 @@ public class RendezVousSeeder implements Seeder {
 
     @Override
     public int getOrder() {
-        return 6;  // S'exécute après CreneauSeeder
+        return 6;
     }
 
     @Override
@@ -40,119 +86,81 @@ public class RendezVousSeeder implements Seeder {
     }
 
     @Override
+    @Transactional
     public void run() {
         log.info("🌱 Exécution de RendezVousSeeder...");
-
-        // Récupérer les médecins et patients
-        List<Utilisateur> medecins = userRepository.findAll().stream()
-                .filter(u -> u.getRole() == Role.MEDECIN)
-                .toList();
 
         List<Utilisateur> patients = userRepository.findAll().stream()
                 .filter(u -> u.getRole() == Role.PATIENT)
                 .toList();
 
-        List<Cabinet> cabinets = cabinetRepository.findAll();
-
-        if (medecins.isEmpty() || patients.isEmpty() || cabinets.isEmpty()) {
-            log.warn("   ⚠️ Données insuffisantes pour créer des rendez-vous");
+        if (patients.isEmpty()) {
+            log.warn("   ⚠️ Aucun patient trouvé, rendez-vous ignorés");
             return;
         }
 
-        Utilisateur medecin = medecins.get(0);
-        Cabinet cabinet = cabinets.get(0);
+        // Regrouper les médecins par cabinet
+        Map<Long, List<Utilisateur>> medecinsByCabinet = userRepository.findAll().stream()
+                .filter(u -> u.getRole() == Role.MEDECIN && u.getCabinet() != null)
+                .collect(Collectors.groupingBy(u -> u.getCabinet().getId()));
 
-        // Créer plusieurs rendez-vous avec différents statuts
-
-        // 1. Rendez-vous passés - TERMINÉS
-        LocalDate hier = LocalDate.now().minusDays(1);
-        RendezVous rdv1 = RendezVous.builder()
-                .patient(patients.get(0))
-                .medecin(medecin)
-                .cabinet(cabinet)
-                .statut(StatutRdv.TERMINE)
-                .motif("Consultation de contrôle - Tension artérielle")
-                .build();
-        rendezVousRepository.save(rdv1);
-        log.info("   ✅ RDV passé terminé: Patient {} avec Dr. {} {}", 
-                patients.get(0).getNom(), medecin.getPrenom(), medecin.getNom());
-
-        // 2. Rendez-vous de la semaine dernière - TERMINÉS
-        LocalDate semaineDerniere = LocalDate.now().minusDays(5);
-        RendezVous rdv2 = RendezVous.builder()
-                .patient(patients.size() > 1 ? patients.get(1) : patients.get(0))
-                .medecin(medecin)
-                .cabinet(cabinet)
-                .statut(StatutRdv.TERMINE)
-                .motif("Première consultation - Douleurs abdominales")
-                .build();
-        rendezVousRepository.save(rdv2);
-        log.info("   ✅ RDV terminé: Patient avec Dr. {}", medecin.getNom());
-
-        // 3. Rendez-vous aujourd'hui - CONFIRMÉ
-        LocalDate aujourdhui = LocalDate.now();
-        RendezVous rdv3 = RendezVous.builder()
-                .patient(patients.get(0))
-                .medecin(medecin)
-                .cabinet(cabinet)
-                .statut(StatutRdv.CONFIRME)
-                .motif("Suivi traitement - Diabète")
-                .build();
-        rendezVousRepository.save(rdv3);
-        log.info("   ✅ RDV aujourd'hui confirmé: Patient {} avec Dr. {}", 
-                patients.get(0).getNom(), medecin.getNom());
-
-        // 4. Rendez-vous demain - EN ATTENTE
-        LocalDate demain = LocalDate.now().plusDays(1);
-        RendezVous rdv4 = RendezVous.builder()
-                .patient(patients.size() > 1 ? patients.get(1) : patients.get(0))
-                .medecin(medecin)
-                .cabinet(cabinet)
-                .statut(StatutRdv.EN_ATTENTE)
-                .motif("Consultation générale - Fièvre et fatigue")
-                .build();
-        rendezVousRepository.save(rdv4);
-        log.info("   ✅ RDV demain en attente: Patient avec Dr. {}", medecin.getNom());
-
-        // 5. Rendez-vous la semaine prochaine - EN ATTENTE
-        LocalDate semaineProche = LocalDate.now().plusDays(3);
-        RendezVous rdv5 = RendezVous.builder()
-                .patient(patients.get(0))
-                .medecin(medecin)
-                .cabinet(cabinet)
-                .statut(StatutRdv.EN_ATTENTE)
-                .motif("Bilan de santé annuel")
-                .build();
-        rendezVousRepository.save(rdv5);
-        log.info("   ✅ RDV semaine prochaine: Patient {} avec Dr. {}", 
-                patients.get(0).getNom(), medecin.getNom());
-
-        // 6. Rendez-vous annulé
-        RendezVous rdv6 = RendezVous.builder()
-                .patient(patients.size() > 1 ? patients.get(1) : patients.get(0))
-                .medecin(medecin)
-                .cabinet(cabinet)
-                .statut(StatutRdv.ANNULE)
-                .motif("Consultation dermatologique (annulé par le patient)")
-                .build();
-        rendezVousRepository.save(rdv6);
-        log.info("   ✅ RDV annulé: Patient avec Dr. {}", medecin.getNom());
-
-        // Si un deuxième médecin existe, créer des rendez-vous pour lui aussi
-        if (medecins.size() > 1 && patients.size() > 1) {
-            Utilisateur medecin2 = medecins.get(1);
-            
-            RendezVous rdv7 = RendezVous.builder()
-                    .patient(patients.get(1))
-                    .medecin(medecin2)
-                    .cabinet(cabinet)
-                    .statut(StatutRdv.CONFIRME)
-                    .motif("Consultation spécialisée - Cardiologie")
-                    .build();
-            rendezVousRepository.save(rdv7);
-            log.info("   ✅ RDV pour Dr. {} (médecin 2)", medecin2.getNom());
+        if (medecinsByCabinet.isEmpty()) {
+            log.warn("   ⚠️ Aucun médecin avec cabinet trouvé");
+            return;
         }
 
-        log.info("✅ RendezVousSeeder terminé - {} rendez-vous créés", rendezVousRepository.count());
+        int totalCreated = 0;
+        int motifIndex = 0;
+
+        for (Map.Entry<Long, List<Utilisateur>> entry : medecinsByCabinet.entrySet()) {
+            Long cabinetId = entry.getKey();
+            List<Utilisateur> medecins = entry.getValue();
+            Cabinet cabinet = medecins.get(0).getCabinet();
+
+            log.info("   🏥 Cabinet '{}' (id={}) - {} médecin(s)", cabinet.getNom(), cabinetId, medecins.size());
+
+            for (Utilisateur medecin : medecins) {
+                // Récupérer les créneaux disponibles de ce médecin
+                List<Creneau> creneauxDisponibles = new ArrayList<>(
+                    creneauRepository.findByMedecinId(medecin.getId()).stream()
+                        .filter(Creneau::getDisponible)
+                        .toList()
+                );
+
+                // Créer 8-12 RDV par médecin selon les créneaux disponibles
+                int nbRdv = Math.min(12, Math.max(8, creneauxDisponibles.size() / 3));
+
+                for (int i = 0; i < nbRdv && i < STATUTS_MIX.length; i++) {
+                    Utilisateur patient = patients.get(i % patients.size());
+                    StatutRdv statut = STATUTS_MIX[i];
+                    String motif = MOTIFS[motifIndex % MOTIFS.length];
+                    motifIndex++;
+
+                    RendezVous.RendezVousBuilder builder = RendezVous.builder()
+                            .patient(patient)
+                            .medecin(medecin)
+                            .cabinet(cabinet)
+                            .statut(statut)
+                            .motif(motif);
+
+                    // Lier à un créneau si disponible
+                    if (!creneauxDisponibles.isEmpty()) {
+                        Creneau creneau = creneauxDisponibles.remove(0);
+                        creneau.setDisponible(false);
+                        creneauRepository.save(creneau);
+                        builder.creneau(creneau);
+                    }
+
+                    rendezVousRepository.save(builder.build());
+                    totalCreated++;
+                }
+
+                log.info("      ✅ {} RDV créés pour Dr. {} {} ({})",
+                        nbRdv, medecin.getPrenom(), medecin.getNom(), cabinet.getNom());
+            }
+        }
+
+        log.info("✅ RendezVousSeeder terminé - {} rendez-vous créés pour {} cabinet(s)",
+                totalCreated, medecinsByCabinet.size());
     }
 }

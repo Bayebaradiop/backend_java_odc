@@ -1,94 +1,101 @@
 package com.medibook.user.mapper;
 
-import com.medibook.user.dto.MedecinRequest;
-import com.medibook.user.dto.SecretaireRequest;
+import org.springframework.stereotype.Component;
+
+import com.medibook.user.dto.MedecinResponse;
 import com.medibook.user.dto.UserResponse;
 import com.medibook.user.entity.Utilisateur;
-import org.mapstruct.BeanMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingConstants;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
 
-/**
- * Mapper pour la conversion entre Utilisateur et DTOs
- */
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
-public interface UserMapper {
+@Component
+public class UserMapper {
 
     /**
-     * Convertit une entity Utilisateur en UserResponse
+     * Transforme un Utilisateur (médecin) en MedecinResponse
      */
-    @Mapping(source = "cabinet.id", target = "cabinetId")
-    @Mapping(source = "cabinet.nom", target = "cabinetNom")
-    @Mapping(source = "specialite.id", target = "specialiteId")
-    @Mapping(source = "specialite.nom", target = "specialiteNom")
-    UserResponse toResponse(Utilisateur utilisateur);
+    public MedecinResponse toMedecinResponse(Utilisateur medecin) {
+        if (medecin == null) {
+            return null;
+        }
+        
+        return MedecinResponse.builder()
+                .id(medecin.getId())
+                .prenom(medecin.getPrenom())
+                .nom(medecin.getNom())
+                .photo(medecin.getPhoto())
+                .telephone(medecin.getTelephone())
+                .email(medecin.getEmail())
+                .specialiteId(medecin.getSpecialite() != null ? medecin.getSpecialite().getId() : null)
+                .specialiteNom(medecin.getSpecialite() != null ? medecin.getSpecialite().getNom() : null)
+                .cabinetId(medecin.getCabinet() != null ? medecin.getCabinet().getId() : null)
+                .cabinetNom(medecin.getCabinet() != null ? medecin.getCabinet().getNom() : null)
+                .build();
+    }
 
     /**
-     * Convertit un MedecinRequest en entity Utilisateur (sans les relations)
-     * Ignore photo (MultipartFile) car géré séparément
+     * Transforme un Utilisateur en UserResponse
      */
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "cabinet", ignore = true)
-    @Mapping(target = "specialite", ignore = true)
-    @Mapping(target = "plannings", ignore = true)
-    @Mapping(target = "rendezVousMedecin", ignore = true)
-    @Mapping(target = "rendezVousPatient", ignore = true)
-    @Mapping(target = "role", ignore = true)
-    @Mapping(target = "status", ignore = true)
-    @Mapping(target = "photo", ignore = true)
-    @Mapping(target = "motDePasse", ignore = true)
-    Utilisateur toEntityFromMedecin(MedecinRequest request);
+    public UserResponse toResponse(Utilisateur utilisateur) {
+        if (utilisateur == null) {
+            return null;
+        }
+
+        return UserResponse.builder()
+                .id(utilisateur.getId())
+                .prenom(utilisateur.getPrenom())
+                .nom(utilisateur.getNom())
+                .email(utilisateur.getEmail())
+                .telephone(utilisateur.getTelephone())
+                .photo(utilisateur.getPhoto())
+                .role(utilisateur.getRole())
+                .status(utilisateur.getStatus())
+                .cabinetId(utilisateur.getCabinet() != null ? utilisateur.getCabinet().getId() : null)
+                .cabinetNom(utilisateur.getCabinet() != null ? utilisateur.getCabinet().getNom() : null)
+                .specialiteId(utilisateur.getSpecialite() != null ? utilisateur.getSpecialite().getId() : null)
+                .specialiteNom(utilisateur.getSpecialite() != null ? utilisateur.getSpecialite().getNom() : null)
+                .build();
+    }
 
     /**
-     * Convertit un SecretaireRequest en entity Utilisateur (sans les relations)
-     * Ignore photo (MultipartFile) car géré séparément
+     * Met à jour un Utilisateur à partir d'un MedecinRequest (champs simples)
      */
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "cabinet", ignore = true)
-    @Mapping(target = "specialite", ignore = true)
-    @Mapping(target = "plannings", ignore = true)
-    @Mapping(target = "rendezVousMedecin", ignore = true)
-    @Mapping(target = "rendezVousPatient", ignore = true)
-    @Mapping(target = "role", ignore = true)
-    @Mapping(target = "status", ignore = true)
-    @Mapping(target = "photo", ignore = true)
-    @Mapping(target = "motDePasse", ignore = true)
-    Utilisateur toEntityFromSecretaire(SecretaireRequest request);
+    public void updateFromMedecinRequest(com.medibook.user.dto.MedecinRequest request, Utilisateur utilisateur) {
+        if (request.prenom() != null) utilisateur.setPrenom(request.prenom());
+        if (request.nom() != null) utilisateur.setNom(request.nom());
+        if (request.email() != null) utilisateur.setEmail(request.email());
+        if (request.telephone() != null) utilisateur.setTelephone(request.telephone());
+    }
 
     /**
-     * Met à jour un Utilisateur à partir d'un MedecinRequest
-     * Ignore photo (MultipartFile) car géré séparément
+     * Convertit un MedecinRequest en entity Utilisateur
      */
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "cabinet", ignore = true)
-    @Mapping(target = "specialite", ignore = true)
-    @Mapping(target = "plannings", ignore = true)
-    @Mapping(target = "rendezVousMedecin", ignore = true)
-    @Mapping(target = "rendezVousPatient", ignore = true)
-    @Mapping(target = "role", ignore = true)
-    @Mapping(target = "status", ignore = true)
-    @Mapping(target = "photo", ignore = true)
-    @Mapping(target = "motDePasse", ignore = true)
-    void updateFromMedecinRequest(MedecinRequest request, @MappingTarget Utilisateur utilisateur);
+    public Utilisateur toEntityFromMedecin(com.medibook.user.dto.MedecinRequest request) {
+        Utilisateur utilisateur = new Utilisateur();
+        utilisateur.setPrenom(request.prenom());
+        utilisateur.setNom(request.nom());
+        utilisateur.setEmail(request.email());
+        utilisateur.setTelephone(request.telephone());
+        return utilisateur;
+    }
+
+    /**
+     * Convertit un SecretaireRequest en entity Utilisateur
+     */
+    public Utilisateur toEntityFromSecretaire(com.medibook.user.dto.SecretaireRequest request) {
+        Utilisateur utilisateur = new Utilisateur();
+        utilisateur.setPrenom(request.prenom());
+        utilisateur.setNom(request.nom());
+        utilisateur.setEmail(request.email());
+        utilisateur.setTelephone(request.telephone());
+        return utilisateur;
+    }
 
     /**
      * Met à jour un Utilisateur à partir d'un SecretaireRequest
-     * Ignore photo (MultipartFile) car géré séparément
      */
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "cabinet", ignore = true)
-    @Mapping(target = "specialite", ignore = true)
-    @Mapping(target = "plannings", ignore = true)
-    @Mapping(target = "rendezVousMedecin", ignore = true)
-    @Mapping(target = "rendezVousPatient", ignore = true)
-    @Mapping(target = "role", ignore = true)
-    @Mapping(target = "status", ignore = true)
-    @Mapping(target = "photo", ignore = true)
-    @Mapping(target = "motDePasse", ignore = true)
-    void updateFromSecretaireRequest(SecretaireRequest request, @MappingTarget Utilisateur utilisateur);
+    public void updateFromSecretaireRequest(com.medibook.user.dto.SecretaireRequest request, Utilisateur utilisateur) {
+        if (request.prenom() != null) utilisateur.setPrenom(request.prenom());
+        if (request.nom() != null) utilisateur.setNom(request.nom());
+        if (request.email() != null) utilisateur.setEmail(request.email());
+        if (request.telephone() != null) utilisateur.setTelephone(request.telephone());
+    }
 }

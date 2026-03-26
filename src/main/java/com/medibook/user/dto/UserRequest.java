@@ -1,4 +1,7 @@
 package com.medibook.user.dto;
 
-public class UserRequest {
-}
+public record UserRequest(
+    String prenom,
+    String nom,
+    String telephone
+) {}

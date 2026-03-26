@@ -3,10 +3,12 @@ package com.medibook.user.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import com.medibook.common.enums.Role;
 import com.medibook.common.enums.Status;
+import lombok.Builder;
 
 /**
  * DTO pour les réponses utilisateur
  */
+@Builder
 @Schema(description = "Réponse d'un utilisateur")
 public record UserResponse(
         
@@ -43,6 +45,6 @@ public record UserResponse(
         @Schema(description = "ID de la spécialité (pour médecin)", example = "1")
         Long specialiteId,
         
-        @Schema(description = "Nom de la spéciale (pour médecin)", example = "Cardiologie")
+        @Schema(description = "Nom de la spécialité (pour médecin)", example = "Cardiologie")
         String specialiteNom
 ) {}

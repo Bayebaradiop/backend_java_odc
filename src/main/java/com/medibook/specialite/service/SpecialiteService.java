@@ -125,16 +125,16 @@ public class SpecialiteService {
      */
     private Utilisateur validateAdminAndGetCabinet(Long userId) {
         Utilisateur user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé"));
+                .orElseThrow(() -> new ResourceNotFoundException(com.medibook.specialite.message.MessageErreur.UTILISATEUR_NON_TROUVE));
 
         if (user.getRole() != Role.ADMIN) {
             log.warn("L'utilisateur {} (rôle: {}) a tenté d'effectuer une action sans être ADMIN", 
                     user.getEmail(), user.getRole());
-            throw new BusinessException("Accès interdit - Réservé aux administrateurs");
+            throw new BusinessException(com.medibook.specialite.message.MessageErreur.ACCES_ADMIN_SEUL);
         }
 
         if (user.getCabinet() == null) {
-            throw new BusinessException("Vous n'avez pas de cabinet associé");
+            throw new BusinessException(com.medibook.specialite.message.MessageErreur.PAS_DE_CABINET);
         }
 
         return user;
@@ -145,18 +145,18 @@ public class SpecialiteService {
      */
     private Utilisateur validateAdminOfCabinet(Long userId, Long cabinetId) {
         Utilisateur user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Utilisateur non trouvé"));
+                .orElseThrow(() -> new ResourceNotFoundException(com.medibook.specialite.message.MessageErreur.UTILISATEUR_NON_TROUVE));
 
         if (user.getRole() != Role.ADMIN) {
             log.warn("L'utilisateur {} (rôle: {}) a tenté d'effectuer une action sans être ADMIN", 
                     user.getEmail(), user.getRole());
-            throw new BusinessException("Accès interdit - Réservé aux administrateurs");
+            throw new BusinessException(com.medibook.specialite.message.MessageErreur.ACCES_ADMIN_SEUL);
         }
 
         // Vérifier que l'utilisateur est ADMIN du cabinet concerné
         if (cabinetId != null && (user.getCabinet() == null || !user.getCabinet().getId().equals(cabinetId))) {
             log.warn("L'utilisateur {} n'est pas ADMIN du cabinet {}", user.getEmail(), cabinetId);
-            throw new BusinessException("Vous n'êtes pas ADMIN de ce cabinet");
+            throw new BusinessException(com.medibook.specialite.message.MessageErreur.PAS_ADMIN_CABINET);
         }
 
         return user;
@@ -167,7 +167,7 @@ public class SpecialiteService {
      */
     private void validateAdminOwnsSpecialite(Utilisateur admin, Specialite specialite) {
         if (admin.getCabinet() == null || !admin.getCabinet().getId().equals(specialite.getCabinet().getId())) {
-            throw new BusinessException("Vous n'êtes pas ADMIN de ce cabinet");
+            throw new BusinessException(com.medibook.specialite.message.MessageErreur.PAS_ADMIN_CABINET);
         }
     }
 
@@ -176,7 +176,7 @@ public class SpecialiteService {
      */
     private void validateSpecialiteData(SpecialiteRequest request, Long cabinetId) {
         if (specialiteRepository.existsByNomAndCabinetId(request.nom(), cabinetId)) {
-            throw new BusinessException("Cette spécialité existe déjà pour ce cabinet");
+            throw new BusinessException(com.medibook.specialite.message.MessageErreur.SPECIALITE_DEJA_EXISTANTE);
         }
     }
 
@@ -186,7 +186,7 @@ public class SpecialiteService {
     private void validateSpecialiteUpdate(SpecialiteRequest request, Specialite currentSpecialite) {
         if (!currentSpecialite.getNom().equals(request.nom()) 
                 && specialiteRepository.existsByNomAndCabinetId(request.nom(), currentSpecialite.getCabinet().getId())) {
-            throw new BusinessException("Cette spécialité existe déjà pour ce cabinet");
+            throw new BusinessException(com.medibook.specialite.message.MessageErreur.SPECIALITE_DEJA_EXISTANTE);
         }
     }
 
@@ -197,7 +197,7 @@ public class SpecialiteService {
      */
     private Cabinet findCabinetById(Long id) {
         return cabinetRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Cabinet non trouvé"));
+                .orElseThrow(() -> new ResourceNotFoundException(com.medibook.specialite.message.MessageErreur.CABINET_NON_TROUVE));
     }
 
     /**
@@ -205,6 +205,6 @@ public class SpecialiteService {
      */
     private Specialite findSpecialiteById(Long id) {
         return specialiteRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Spécialité non trouvée"));
+                .orElseThrow(() -> new ResourceNotFoundException(com.medibook.specialite.message.MessageErreur.SPECIALITE_NON_TROUVEE));
     }
 }

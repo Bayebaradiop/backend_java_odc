@@ -1,38 +1,61 @@
 package com.medibook.specialite.mapper;
 
+import org.springframework.stereotype.Component;
+
 import com.medibook.specialite.dto.SpecialiteRequest;
 import com.medibook.specialite.dto.SpecialiteResponse;
 import com.medibook.specialite.entity.Specialite;
-import org.mapstruct.BeanMapping;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingConstants;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
 
-/**
- * Mapper pour la conversion entre Specialite, SpecialiteRequest et SpecialiteResponse
- */
-@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
-public interface SpecialiteMapper {
+@Component
+public class SpecialiteMapper {
 
     /**
-     * Convertit un SpecialiteRequest en entity Specialite
+     * Transforme une Specialite en SpecialiteResponse (utilisé par bara_dev)
      */
-    @Mapping(target = "cabinet", ignore = true)
-    @Mapping(target = "id", ignore = true)
-    Specialite toEntity(SpecialiteRequest request);
+    public SpecialiteResponse toSpecialiteResponse(Specialite specialite) {
+        if (specialite == null) {
+            return null;
+        }
+        
+        return SpecialiteResponse.builder()
+                .id(specialite.getId())
+                .nom(specialite.getNom())
+                .description(specialite.getDescription())
+                .cabinetId(specialite.getCabinet() != null ? specialite.getCabinet().getId() : null)
+                .cabinetNom(specialite.getCabinet() != null ? specialite.getCabinet().getNom() : null)
+                .build();
+    }
 
     /**
-     * Convertit une entity Specialite en SpecialiteResponse
+     * Transforme un SpecialiteRequest en entité Specialite (utilisé par lydevtech)
      */
-    @Mapping(source = "cabinet.nom", target = "cabinetNom")
-    @Mapping(source = "cabinet.id", target = "cabinetId")
-    SpecialiteResponse toResponseDTO(Specialite specialite);
+    public Specialite toEntity(SpecialiteRequest request) {
+        if (request == null) {
+            return null;
+        }
+
+        return Specialite.builder()
+                .nom(request.nom())
+                .description(request.description())
+                .build();
+    }
+
+    /**
+     * Transforme une Specialite en SpecialiteResponse (alias utilisé par lydevtech / SpecialiteService)
+     */
+    public SpecialiteResponse toResponseDTO(Specialite specialite) {
+        return toSpecialiteResponse(specialite);
+    }
 
     /**
      * Met à jour une Specialite existante à partir d'un SpecialiteRequest
      */
-    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updateFromRequest(SpecialiteRequest request, @MappingTarget Specialite specialite);
+    public void updateFromRequest(SpecialiteRequest request, Specialite specialite) {
+        if (request == null || specialite == null) {
+            return;
+        }
+
+        specialite.setNom(request.nom());
+        specialite.setDescription(request.description());
+    }
 }
