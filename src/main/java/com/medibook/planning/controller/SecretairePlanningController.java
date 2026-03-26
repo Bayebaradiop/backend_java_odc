@@ -71,4 +71,18 @@ public class SecretairePlanningController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiStandardResponse.success(response, MessageSucces.PLANNING_CREE));
     }
+
+    @Operation(summary = "Supprimer un planning", description = "Supprime un template de planning hebdomadaire")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = MessageSucces.PLANNING_SUPPRIME),
+            @ApiResponse(responseCode = "401", description = MessageErreur.NON_AUTHENTIFIE),
+            @ApiResponse(responseCode = "404", description = MessageErreur.PLANNING_NON_TROUVE)
+    })
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('SECRETAIRE')")
+    public ResponseEntity<ApiStandardResponse<Void>> deletePlanning(
+            @Parameter(description = "ID du planning") @PathVariable Long id) {
+        planningService.deletePlanning(id);
+        return ResponseEntity.ok(ApiStandardResponse.success(null, MessageSucces.PLANNING_SUPPRIME));
+    }
 }

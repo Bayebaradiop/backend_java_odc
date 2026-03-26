@@ -10,7 +10,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.medibook.auth.dto.LoginRequest;
 import com.medibook.auth.dto.RegisterRequest;
@@ -102,6 +104,16 @@ public class AuthController {
     @PutMapping("/profile")
     public ResponseEntity<?> updateProfile(@RequestBody UserRequest request) {
         return ResponseEntity.ok(userService.updateProfile(request));
+    }
+
+    @Operation(summary = "Modifier ma photo de profil", description = "Upload une nouvelle photo de profil")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Photo mise à jour"),
+        @ApiResponse(responseCode = "400", description = "Fichier invalide")
+    })
+    @PutMapping("/profile/photo")
+    public ResponseEntity<?> updateProfilePhoto(@RequestParam("photo") MultipartFile photo) {
+        return ResponseEntity.ok(userService.updateProfilePhoto(photo));
     }
     
 }

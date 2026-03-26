@@ -2,8 +2,10 @@ package com.medibook.user.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.medibook.common.security.SecurityService;
+import com.medibook.common.storage.CloudinaryStorageService;
 import com.medibook.user.dto.ProfileResponse;
 import com.medibook.user.dto.UserRequest;
 import com.medibook.user.entity.Utilisateur;
@@ -17,6 +19,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final SecurityService securityService;
+    private final CloudinaryStorageService storageService;
 
     @Transactional(readOnly = true)
     public ProfileResponse getProfile() {
@@ -31,6 +34,18 @@ public class UserService {
         if (request.nom() != null) user.setNom(request.nom());
         if (request.telephone() != null) user.setTelephone(request.telephone());
         user = userRepository.save(user);
+        return toProfileResponse(user);
+    }
+
+    @Transactional
+    public ProfileResponse updateProfilePhoto(MultipartFile photo) {
+        Utilisateur user = securityService.getUtilisateurConnecte();
+        String folder = "medibook/patients/" + user.getId();
+        String url = storageService.uploadFile(photo, folder);
+        if (url != null) {
+            user.setPhoto(url);
+            user = userRepository.save(user);
+        }
         return toProfileResponse(user);
     }
 
