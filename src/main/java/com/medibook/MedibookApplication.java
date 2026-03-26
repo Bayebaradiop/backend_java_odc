@@ -7,6 +7,8 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import java.io.File;
+
 @SpringBootApplication
 @EnableMethodSecurity
 @EnableAsync
@@ -14,13 +16,14 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class MedibookApplication {
 
     public static void main(String[] args) {
-
-        Dotenv dotenv = Dotenv.load();
-
-        dotenv.entries().forEach(entry ->
-                System.setProperty(entry.getKey(), entry.getValue())
-        );
-
+        // Only load dotenv if .env file exists (local development)
+        File envFile = new File(".env");
+        if (envFile.exists()) {
+            Dotenv dotenv = Dotenv.load();
+            dotenv.entries().forEach(entry ->
+                    System.setProperty(entry.getKey(), entry.getValue())
+            );
+        }
 
         SpringApplication.run(MedibookApplication.class, args);
     }
