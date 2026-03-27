@@ -47,4 +47,4 @@ jobs:
       - name: Deployment triggered
         run: |
           echo "✅ Image Docker poussée vers Docker Hub: ${{ secrets.DOCKERHUB_USERNAME }}/medibook-api:latest"
-          echo "✅ Déclenchement du déploiement Render effectué avec succès!"
+          echo "✅ Déclenchement du déploiement Render effectué avec succès  !"
