@@ -56,9 +56,10 @@ cloudinary:
   api-key: ${CLOUDINARY_API_KEY}
   api-secret: ${CLOUDINARY_API_SECRET}
 
+# Brevo (optionnel - peut nécessiter des variables d'environnement)
 brevo:
-  api-key: ${BREVO_API_KEY}
-  sender-email: ${BREVO_SENDER_EMAIL:bayebara2000@gmail.com}
+  api-key: ${BREVO_API_KEY:placeholder-key}
+  sender-email: ${BREVO_SENDER_EMAIL:placeholder@email.com}
   sender-name: ${BREVO_SENDER_NAME:MediBook}
 
 app:
