@@ -148,10 +148,6 @@ public class ExceptionService {
             throw new BusinessException(MessageErreur.ACCES_SECRETAIRE_SEUL);
         }
 
-        if (secretaire.getSpecialite() == null) {
-            throw new BusinessException(MessageErreur.SPECIALITE_SECRETAIRE_OBLIGATOIRE);
-        }
-
         return secretaire;
     }
 
@@ -164,11 +160,6 @@ public class ExceptionService {
         if (medecin.getCabinet() == null || secretaire.getCabinet() == null
                 || !medecin.getCabinet().getId().equals(secretaire.getCabinet().getId())) {
             throw new BusinessException(MessageErreur.MEDECIN_MEME_CABINET);
-        }
-
-        if (medecin.getSpecialite() == null
-                || !medecin.getSpecialite().getId().equals(secretaire.getSpecialite().getId())) {
-            throw new BusinessException(MessageErreur.MEDECIN_MEME_SPECIALITE);
         }
     }
 }

@@ -29,5 +29,5 @@ public class MessageErreur {
     public static final String SECRETAIRE_DEJA_EXISTANT = "Ce/Cette secrétaire existe déjà";
     public static final String SECRETAIRE_HORS_CABINET = "Ce/Cette secrétaire n'appartient pas à votre cabinet";
     public static final String ACCES_SECRETAIRE_SEUL = "Accès réservé aux secrétaires";
-    public static final String SECRETAIRE_SANS_CABINET_OU_SPECIALITE = "Le secrétaire doit appartenir à un cabinet et avoir une spécialité";
+    public static final String SECRETAIRE_SANS_CABINET_OU_SPECIALITE = "Le/la secrétaire doit appartenir à un cabinet";
 }

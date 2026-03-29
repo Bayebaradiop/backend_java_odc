@@ -14,6 +14,8 @@ public interface ExceptionsPlanningRepository extends JpaRepository<ExceptionsPl
 
     List<ExceptionsPlanning> findByMedecinIdAndDate(Long medecinId, LocalDate date);
 
+    List<ExceptionsPlanning> findByMedecinIdAndDateBetween(Long medecinId, LocalDate startDate, LocalDate endDate);
+
     boolean existsByMedecinIdAndDate(Long medecinId, LocalDate date);
 
     void deleteByMedecinId(Long medecinId);

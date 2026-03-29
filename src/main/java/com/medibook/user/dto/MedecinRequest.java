@@ -1,8 +1,10 @@
 package com.medibook.user.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
@@ -24,10 +26,12 @@ public record MedecinRequest(
         
         @Schema(description = "Email du médecin", example = "jean.dupont@cabinet.com")
         @NotBlank(message = "L'email est obligatoire")
+        @Email(message = "L'adresse email est invalide")
         String email,
         
         @Schema(description = "Téléphone du médecin", example = "+221771234567")
         @NotBlank(message = "Le téléphone est obligatoire")
+        @Pattern(regexp = "^[+]?[0-9][0-9\\s\\-()]{7,19}$", message = "Le numéro de téléphone est invalide")
         String telephone,
         
         @Schema(description = "Mot de passe temporaire (optionnel pour mise à jour)", example = "MotDePasse123!")

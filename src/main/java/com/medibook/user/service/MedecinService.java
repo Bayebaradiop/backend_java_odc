@@ -6,6 +6,7 @@ import com.medibook.common.enums.Role;
 import com.medibook.common.enums.Status;
 import com.medibook.common.event.MedecinCreatedEvent;
 import com.medibook.common.exception.BusinessException;
+import com.medibook.common.exception.FieldValidationException;
 import com.medibook.common.exception.ResourceNotFoundException;
 import com.medibook.common.storage.MediaUploadService;
 import com.medibook.specialite.entity.Specialite;
@@ -23,7 +24,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service pour la gestion des médecins
@@ -143,10 +146,10 @@ public class MedecinService {
     }
 
     /**
-     * Récupère les médecins du cabinet par spécialité (pour secretary)
+     * Récupère tous les médecins du cabinet du/de la secrétaire
      */
     @Transactional(readOnly = true)
-    public List<UserResponse> getMedecinsBySpecialite(Long secretaireId) {
+    public List<UserResponse> getMedecinsDuCabinet(Long secretaireId) {
         Utilisateur secretaire = userRepository.findById(secretaireId)
                 .orElseThrow(() -> new ResourceNotFoundException(com.medibook.user.message.MessageErreur.SECRETAIRE_NON_TROUVE));
 
@@ -158,19 +161,10 @@ public class MedecinService {
             throw new BusinessException(com.medibook.user.message.MessageErreur.SECRETAIRE_SANS_CABINET_OU_SPECIALITE);
         }
 
-        List<Utilisateur> medecins;
-        if (secretaire.getSpecialite() != null) {
-            medecins = userRepository.findByRoleAndCabinetIdAndSpecialiteId(
-                    Role.MEDECIN,
-                    secretaire.getCabinet().getId(),
-                    secretaire.getSpecialite().getId()
-            );
-        } else {
-            medecins = userRepository.findByRoleAndCabinetId(
-                    Role.MEDECIN,
-                    secretaire.getCabinet().getId()
-            );
-        }
+        List<Utilisateur> medecins = userRepository.findByRoleAndCabinetId(
+                Role.MEDECIN,
+                secretaire.getCabinet().getId()
+        );
 
         return medecins.stream().map(userMapper::toResponse).toList();
     }
@@ -267,24 +261,43 @@ public class MedecinService {
     }
 
     private void validateMedecinData(MedecinRequest request, Long cabinetId) {
-        if (userRepository.existsByEmailAndCabinetId(request.email(), cabinetId)) {
-            throw new BusinessException(com.medibook.user.message.MessageErreur.EMAIL_DEJA_UTILISE_CABINET);
-        }
+        Map<String, String> errors = new LinkedHashMap<>();
 
-        if (userRepository.existsByTelephoneAndCabinetId(request.telephone(), cabinetId)) {
-            throw new BusinessException(com.medibook.user.message.MessageErreur.TELEPHONE_DEJA_UTILISE_CABINET);
+        collectMedecinFieldErrors(request, errors, cabinetId, null);
+
+        if (!errors.isEmpty()) {
+            throw new FieldValidationException("Veuillez corriger les champs en erreur", errors);
         }
     }
 
     private void validateMedecinUpdate(MedecinRequest request, Utilisateur currentMedecin, Long cabinetId) {
-        if (!currentMedecin.getEmail().equals(request.email())
-                && userRepository.existsByEmailAndCabinetId(request.email(), cabinetId)) {
-            throw new BusinessException(com.medibook.user.message.MessageErreur.EMAIL_DEJA_UTILISE_CABINET);
+        Map<String, String> errors = new LinkedHashMap<>();
+
+        collectMedecinFieldErrors(request, errors, cabinetId, currentMedecin);
+
+        if (!errors.isEmpty()) {
+            throw new FieldValidationException("Veuillez corriger les champs en erreur", errors);
+        }
+    }
+
+    private void collectMedecinFieldErrors(
+            MedecinRequest request,
+            Map<String, String> errors,
+            Long cabinetId,
+            Utilisateur currentMedecin
+    ) {
+        if (request.email() != null && !request.email().isBlank()) {
+            boolean emailChanged = currentMedecin == null || !request.email().equals(currentMedecin.getEmail());
+            if (emailChanged && userRepository.existsByEmailAndCabinetId(request.email(), cabinetId)) {
+                errors.put("email", com.medibook.user.message.MessageErreur.EMAIL_DEJA_UTILISE_CABINET);
+            }
         }
 
-        if (!currentMedecin.getTelephone().equals(request.telephone())
-                && userRepository.existsByTelephoneAndCabinetId(request.telephone(), cabinetId)) {
-            throw new BusinessException(com.medibook.user.message.MessageErreur.TELEPHONE_DEJA_UTILISE_CABINET);
+        if (request.telephone() != null && !request.telephone().isBlank()) {
+            boolean telephoneChanged = currentMedecin == null || !request.telephone().equals(currentMedecin.getTelephone());
+            if (telephoneChanged && userRepository.existsByTelephoneAndCabinetId(request.telephone(), cabinetId)) {
+                errors.put("telephone", com.medibook.user.message.MessageErreur.TELEPHONE_DEJA_UTILISE_CABINET);
+            }
         }
     }
 

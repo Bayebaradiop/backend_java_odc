@@ -58,6 +58,13 @@ public class GlobalExceptionHandler {
                 .body(ApiStandardResponse.error(ex.getMessage(), ERR_FORBIDDEN));
     }
 
+    @ExceptionHandler(FieldValidationException.class)
+    public ResponseEntity<ApiStandardResponse<?>> handleFieldValidationException(FieldValidationException ex) {
+        log.warn("Field validation error: {}", ex.getFieldErrors());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ApiStandardResponse.error(ex.getMessage(), ERR_VALIDATION, ex.getFieldErrors()));
+    }
+
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiStandardResponse<?>> handleBusinessException(BusinessException ex) {
         log.warn("Business error: {}", ex.getMessage());

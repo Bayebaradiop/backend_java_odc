@@ -59,20 +59,19 @@ public class SecretaireController {
     // ==================== MÉDECINS ====================
 
     @Operation(
-            summary = "Liste des médecins par spécialité",
-            description = "Retourne les médecins du cabinet ayant la même spécialité que le/la secrétaire"
+            summary = "Liste des médecins du cabinet",
+            description = "Retourne tous les médecins du cabinet du/de la secrétaire connecté(e)"
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Médecins récupérés avec succès"),
             @ApiResponse(responseCode = "401", description = "Non authentifié"),
-            @ApiResponse(responseCode = "403", description = "Accès interdit - Réservé au secretary")
+            @ApiResponse(responseCode = "403", description = "Accès réservé aux secrétaires")
     })
     @GetMapping("/medecins")
     @PreAuthorize("hasRole('SECRETAIRE')")
-    public ResponseEntity<ApiStandardResponse<List<UserResponse>>> getMedecinsBySpecialite() {
+    public ResponseEntity<ApiStandardResponse<List<UserResponse>>> getMedecinsDuCabinet() {
         Long userId = jwtUserUtil.getCurrentUserId();
-        List<UserResponse> medecins = medecinService.getMedecinsBySpecialite(userId);
+        List<UserResponse> medecins = medecinService.getMedecinsDuCabinet(userId);
         return ResponseEntity.ok(ApiStandardResponse.success(medecins, "Médecins récupérés avec succès"));
     }
 }
-

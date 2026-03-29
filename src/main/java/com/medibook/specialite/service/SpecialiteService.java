@@ -4,6 +4,7 @@ import com.medibook.cabinet.entity.Cabinet;
 import com.medibook.cabinet.repository.CabinetRepository;
 import com.medibook.common.enums.Role;
 import com.medibook.common.exception.BusinessException;
+import com.medibook.common.exception.FieldValidationException;
 import com.medibook.common.exception.ResourceNotFoundException;
 import com.medibook.specialite.dto.SpecialiteRequest;
 import com.medibook.specialite.dto.SpecialiteResponse;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service pour la gestion des spécialités
@@ -176,7 +178,10 @@ public class SpecialiteService {
      */
     private void validateSpecialiteData(SpecialiteRequest request, Long cabinetId) {
         if (specialiteRepository.existsByNomAndCabinetId(request.nom(), cabinetId)) {
-            throw new BusinessException(com.medibook.specialite.message.MessageErreur.SPECIALITE_DEJA_EXISTANTE);
+            throw new FieldValidationException(
+                    "Veuillez corriger les champs en erreur",
+                    Map.of("nom", com.medibook.specialite.message.MessageErreur.SPECIALITE_DEJA_EXISTANTE)
+            );
         }
     }
 
@@ -186,7 +191,10 @@ public class SpecialiteService {
     private void validateSpecialiteUpdate(SpecialiteRequest request, Specialite currentSpecialite) {
         if (!currentSpecialite.getNom().equals(request.nom()) 
                 && specialiteRepository.existsByNomAndCabinetId(request.nom(), currentSpecialite.getCabinet().getId())) {
-            throw new BusinessException(com.medibook.specialite.message.MessageErreur.SPECIALITE_DEJA_EXISTANTE);
+            throw new FieldValidationException(
+                    "Veuillez corriger les champs en erreur",
+                    Map.of("nom", com.medibook.specialite.message.MessageErreur.SPECIALITE_DEJA_EXISTANTE)
+            );
         }
     }
 

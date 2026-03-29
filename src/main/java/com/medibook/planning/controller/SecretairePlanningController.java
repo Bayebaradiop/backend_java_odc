@@ -35,7 +35,7 @@ public class SecretairePlanningController {
     private final PlanningService planningService;
     private final JwtUserUtil jwtUserUtil;
 
-    @Operation(summary = "Plannings d'un médecin", description = "Liste les plannings hebdomadaires d'un médecin de la même spécialité")
+    @Operation(summary = "Plannings d'un médecin", description = "Liste les plannings hebdomadaires d'un médecin du même cabinet")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = MessageSucces.PLANNINGS_RECUPERES),
             @ApiResponse(responseCode = "401", description = MessageErreur.NON_AUTHENTIFIE),
@@ -52,7 +52,7 @@ public class SecretairePlanningController {
     @Operation(
             summary = "Créer un template de planning",
             description = "Crée un template de planning hebdomadaire pour un médecin. "
-                    + "Le médecin doit avoir la même spécialité que le/la secrétaire."
+                    + "Le médecin doit appartenir au même cabinet que le/la secrétaire."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = MessageSucces.PLANNING_CREE),

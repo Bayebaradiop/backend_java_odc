@@ -5,6 +5,7 @@ import com.medibook.common.enums.Role;
 import com.medibook.common.enums.Status;
 import com.medibook.common.event.SecretaireCreatedEvent;
 import com.medibook.common.exception.BusinessException;
+import com.medibook.common.exception.FieldValidationException;
 import com.medibook.common.exception.ResourceNotFoundException;
 import com.medibook.common.storage.MediaUploadService;
 import com.medibook.user.dto.SecretaireRequest;
@@ -20,7 +21,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service pour la gestion des secrétaires
@@ -248,12 +251,12 @@ public class SecretaireService {
      * Valide les données d'un nouveau secretary
      */
     private void validateSecretaireData(SecretaireRequest request, Long cabinetId) {
-        if (userRepository.existsByEmailAndCabinetId(request.email(), cabinetId)) {
-            throw new BusinessException(com.medibook.user.message.MessageErreur.EMAIL_DEJA_UTILISE_CABINET);
-        }
+        Map<String, String> errors = new LinkedHashMap<>();
 
-        if (userRepository.existsByTelephoneAndCabinetId(request.telephone(), cabinetId)) {
-            throw new BusinessException(com.medibook.user.message.MessageErreur.TELEPHONE_DEJA_UTILISE_CABINET);
+        collectSecretaireFieldErrors(request, errors, cabinetId, null);
+
+        if (!errors.isEmpty()) {
+            throw new FieldValidationException("Veuillez corriger les champs en erreur", errors);
         }
     }
 
@@ -261,16 +264,33 @@ public class SecretaireService {
      * Valide les données lors de la mise à jour
      */
     private void validateSecretaireUpdate(SecretaireRequest request, Utilisateur currentSecretaire, Long cabinetId) {
-        // Vérifier si le nouvel email est déjà utilisé
-        if (!currentSecretaire.getEmail().equals(request.email())
-                && userRepository.existsByEmailAndCabinetId(request.email(), cabinetId)) {
-            throw new BusinessException(com.medibook.user.message.MessageErreur.EMAIL_DEJA_UTILISE_CABINET);
+        Map<String, String> errors = new LinkedHashMap<>();
+
+        collectSecretaireFieldErrors(request, errors, cabinetId, currentSecretaire);
+
+        if (!errors.isEmpty()) {
+            throw new FieldValidationException("Veuillez corriger les champs en erreur", errors);
+        }
+    }
+
+    private void collectSecretaireFieldErrors(
+            SecretaireRequest request,
+            Map<String, String> errors,
+            Long cabinetId,
+            Utilisateur currentSecretaire
+    ) {
+        if (request.email() != null && !request.email().isBlank()) {
+            boolean emailChanged = currentSecretaire == null || !request.email().equals(currentSecretaire.getEmail());
+            if (emailChanged && userRepository.existsByEmailAndCabinetId(request.email(), cabinetId)) {
+                errors.put("email", com.medibook.user.message.MessageErreur.EMAIL_DEJA_UTILISE_CABINET);
+            }
         }
 
-        // Vérifier si le nouveau téléphone est déjà utilisé
-        if (!currentSecretaire.getTelephone().equals(request.telephone())
-                && userRepository.existsByTelephoneAndCabinetId(request.telephone(), cabinetId)) {
-            throw new BusinessException(com.medibook.user.message.MessageErreur.TELEPHONE_DEJA_UTILISE_CABINET);
+        if (request.telephone() != null && !request.telephone().isBlank()) {
+            boolean telephoneChanged = currentSecretaire == null || !request.telephone().equals(currentSecretaire.getTelephone());
+            if (telephoneChanged && userRepository.existsByTelephoneAndCabinetId(request.telephone(), cabinetId)) {
+                errors.put("telephone", com.medibook.user.message.MessageErreur.TELEPHONE_DEJA_UTILISE_CABINET);
+            }
         }
     }
 

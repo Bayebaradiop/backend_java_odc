@@ -8,7 +8,7 @@ import com.medibook.cabinet.message.MessageErreur;
 import com.medibook.cabinet.repository.CabinetRepository;
 import com.medibook.common.enums.Role;
 import com.medibook.common.enums.Status;
-import com.medibook.common.exception.BusinessException;
+import com.medibook.common.exception.FieldValidationException;
 import com.medibook.common.exception.ResourceNotFoundException;
 import com.medibook.common.exception.UnauthorizedException;
 import com.medibook.common.storage.MediaUploadService;
@@ -21,7 +21,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service pour la gestion des cabinets
@@ -51,8 +53,8 @@ public class CabinetService {
         // 1. Validation Super Admin
         Utilisateur superAdmin = validateSuperAdmin(userId);
 
-        // 2. Validation Cabinet
-        validateCabinetData(dto);
+        // 2. Validation complète avant toute écriture
+        validateCreateCabinetRequest(dto);
 
         // 3. Créer le cabinet
         Cabinet cabinet = cabinetMapper.toEntity(dto);
@@ -99,15 +101,16 @@ public class CabinetService {
     }
 
     /**
-     * Valide les données du cabinet
+     * Valide toutes les données de création du cabinet
      */
-    private void validateCabinetData(CabinetCreateDTO dto) {
-        if (cabinetRepository.existsByNom(dto.nom())) {
-            throw new BusinessException(MessageErreur.CABINET_DEJA_EXISTANT);
-        }
+    private void validateCreateCabinetRequest(CabinetCreateDTO dto) {
+        Map<String, String> errors = new LinkedHashMap<>();
 
-        if (cabinetRepository.existsByEmail(dto.email())) {
-            throw new BusinessException(MessageErreur.EMAIL_DEJA_UTILISE);
+        collectCabinetFieldErrors(dto, errors, null);
+        collectAdminFieldErrors(dto, errors);
+
+        if (!errors.isEmpty()) {
+            throw new FieldValidationException("Veuillez corriger les champs en erreur", errors);
         }
     }
 
@@ -115,9 +118,6 @@ public class CabinetService {
      * Crée l'administrateur du cabinet et construit la réponse
      */
     private CabinetResponseDTO createAdminAndBuildResponse(CabinetCreateDTO dto, Cabinet savedCabinet) {
-        // Valider les données admin
-        validateAdminData(dto);
-
         // Créer l'utilisateur ADMIN
         Utilisateur admin = Utilisateur.builder()
                 .nom(dto.adminNom())
@@ -166,21 +166,41 @@ public class CabinetService {
     }
 
     /**
-     * Valide les données de l'administrateur
+     * Ajoute les erreurs métier liées au cabinet
      */
-    private void validateAdminData(CabinetCreateDTO dto) {
-        if (dto.adminNom() == null || dto.adminPrenom() == null || 
-            dto.adminEmail() == null || dto.adminTelephone() == null || 
-            dto.adminPassword() == null) {
-            throw new BusinessException(MessageErreur.ADMIN_INFO_INCOMPLETE);
+    private void collectCabinetFieldErrors(CabinetCreateDTO dto, Map<String, String> errors, Cabinet currentCabinet) {
+        if (dto.nom() != null && !dto.nom().isBlank()) {
+            boolean nomChanged = currentCabinet == null || !dto.nom().equals(currentCabinet.getNom());
+            if (nomChanged && cabinetRepository.existsByNom(dto.nom())) {
+                errors.put("nom", MessageErreur.CABINET_DEJA_EXISTANT);
+            }
         }
 
-        if (userRepository.existsByEmail(dto.adminEmail())) {
-            throw new BusinessException(MessageErreur.ADMIN_EMAIL_DEJA_UTILISE);
+        if (dto.email() != null && !dto.email().isBlank()) {
+            boolean emailChanged = currentCabinet == null || !dto.email().equals(currentCabinet.getEmail());
+            if (emailChanged && cabinetRepository.existsByEmail(dto.email())) {
+                errors.put("email", MessageErreur.EMAIL_DEJA_UTILISE);
+            }
         }
 
-        if (userRepository.existsByTelephone(dto.adminTelephone())) {
-            throw new BusinessException(MessageErreur.ADMIN_TELEPHONE_DEJA_UTILISE);
+        if (dto.telephone() != null && !dto.telephone().isBlank()) {
+            boolean telephoneChanged = currentCabinet == null || !dto.telephone().equals(currentCabinet.getTelephone());
+            if (telephoneChanged && cabinetRepository.existsByTelephone(dto.telephone())) {
+                errors.put("telephone", MessageErreur.TELEPHONE_DEJA_UTILISE);
+            }
+        }
+    }
+
+    /**
+     * Ajoute les erreurs métier liées à l'administrateur
+     */
+    private void collectAdminFieldErrors(CabinetCreateDTO dto, Map<String, String> errors) {
+        if (dto.adminEmail() != null && !dto.adminEmail().isBlank() && userRepository.existsByEmail(dto.adminEmail())) {
+            errors.put("adminEmail", MessageErreur.ADMIN_EMAIL_DEJA_UTILISE);
+        }
+
+        if (dto.adminTelephone() != null && !dto.adminTelephone().isBlank() && userRepository.existsByTelephone(dto.adminTelephone())) {
+            errors.put("adminTelephone", MessageErreur.ADMIN_TELEPHONE_DEJA_UTILISE);
         }
     }
 
@@ -243,14 +263,11 @@ public class CabinetService {
      * Valide les données lors de la mise à jour
      */
     private void validateCabinetUpdate(CabinetCreateDTO dto, Cabinet currentCabinet) {
-        // Vérifier si le nouveau nom est déjà utilisé
-        if (!currentCabinet.getNom().equals(dto.nom()) && cabinetRepository.existsByNom(dto.nom())) {
-            throw new BusinessException(MessageErreur.CABINET_DEJA_EXISTANT);
-        }
+        Map<String, String> errors = new LinkedHashMap<>();
+        collectCabinetFieldErrors(dto, errors, currentCabinet);
 
-        // Vérifier si le nouvel email est déjà utilisé
-        if (!currentCabinet.getEmail().equals(dto.email()) && cabinetRepository.existsByEmail(dto.email())) {
-            throw new BusinessException(MessageErreur.EMAIL_DEJA_UTILISE);
+        if (!errors.isEmpty()) {
+            throw new FieldValidationException("Veuillez corriger les champs en erreur", errors);
         }
     }
 
