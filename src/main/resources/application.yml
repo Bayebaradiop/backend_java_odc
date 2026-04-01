@@ -58,9 +58,9 @@ cloudinary:
 
 # Brevo (optionnel - peut nécessiter des variables d'environnement)
 brevo:
-  api-key: ${BREVO_API_KEY:placeholder-key}
-  sender-email: ${BREVO_SENDER_EMAIL:placeholder@email.com}
-  sender-name: ${BREVO_SENDER_NAME:MediBook}
+  api-key: ${BREVO_API_KEY}
+  sender-email: ${BREVO_SENDER_EMAIL}
+  sender-name: ${BREVO_SENDER_NAME}
 
 app:
   front-url: https://app.medibook.com
