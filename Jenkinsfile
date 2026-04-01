@@ -17,24 +17,9 @@ pipeline {
             }
         }
 
-        stage('Build Spring Boot') {
-            agent {
-                docker {
-                    image 'maven:3.9.5-eclipse-temurin-17'
-                    args '-v $HOME/.m2:/root/.m2'
-                    reuseNode true
-                }
-            }
-            steps {
-                echo '🔨 Build Maven (sans tests)...'
-                sh 'mvn clean package -DskipTests'
-                echo '✅ Build Maven terminé !'
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
-                echo '🐳 Construction de l\'image Docker...'
+                echo '🐳 Build Maven + Construction image Docker...'
                 sh """
                     docker build -t ${ACR_REPO}:latest .
                     docker build -t ${ACR_REPO}:${BUILD_NUMBER} .
@@ -71,30 +56,23 @@ pipeline {
                     string(credentialsId: 'AZURE_SUBSCRIPTION_ID', variable: 'SUBSCRIPTION_ID')
                 ]) {
                     sh """
-                        # Installer Azure CLI si absent
-                        if ! command -v az &> /dev/null; then
-                            curl -sL https://aka.ms/InstallAzureCLIDeb | bash
-                        fi
-
-                        # Login Azure avec service principal
                         az login --service-principal \
                             -u \$CLIENT_ID \
                             -p \$CLIENT_SECRET \
-                            --tenant \$TENANT_ID
+                            --tenant \$TENANT_ID --output none
 
                         az account set --subscription \$SUBSCRIPTION_ID
 
-                        # Installer extension Container Apps
-                        az extension add --name containerapp --upgrade -y
+                        az extension add --name containerapp --upgrade -y 2>/dev/null
 
-                        # Déployer la nouvelle image
                         az containerapp update \
                             --name ${CONTAINER_APP} \
                             --resource-group ${RESOURCE_GROUP} \
-                            --image ${ACR_REPO}:${BUILD_NUMBER}
+                            --image ${ACR_REPO}:${BUILD_NUMBER} \
+                            --output table
 
                         echo "✅ Déploiement terminé !"
-                        echo "🌐 URL: https://medibook-app.ashyforest-850fd289.spaincentral.azurecontainerapps.io"
+                        echo "🌐 https://medibook-app.ashyforest-850fd289.spaincentral.azurecontainerapps.io"
                     """
                 }
             }
@@ -106,7 +84,7 @@ pipeline {
                 sh """
                     docker rmi ${ACR_REPO}:latest || true
                     docker rmi ${ACR_REPO}:${BUILD_NUMBER} || true
-                    docker system prune -f || true
+                    docker image prune -f || true
                 """
             }
         }
