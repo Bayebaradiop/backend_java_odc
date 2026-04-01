@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'agent-medibook' }
+    agent { label 'docker-medibook' }
 
     environment {
         ACR_REPO = 'medibookregistry.azurecr.io/medibook'
