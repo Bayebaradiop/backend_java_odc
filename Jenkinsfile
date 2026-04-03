@@ -12,69 +12,98 @@ pipeline {
         RESOURCE_GROUP = 'medibook-rg'
     }
 
+    options {
+        timestamps() // logs avec heure
+    }
+
     stages {
 
+        // =========================
+        // 1. CHECKOUT
+        // =========================
         stage('Checkout') {
             steps {
-                echo '📥 Récupération du code source...'
+                echo '📥 Checkout du code...'
                 checkout scm
             }
         }
 
+        // =========================
+        // 2. BUILD IMAGE
+        // =========================
         stage('Build Docker Image') {
             steps {
-                echo '🐳 Build + Docker image...'
+                echo '🐳 Build image Docker...'
                 sh """
                     docker build -t ${ACR_REPO}:latest .
                     docker build -t ${ACR_REPO}:${BUILD_NUMBER} .
 
-                    # tag Docker Hub
                     docker tag ${ACR_REPO}:latest ${DOCKERHUB_REPO}:latest
                     docker tag ${ACR_REPO}:${BUILD_NUMBER} ${DOCKERHUB_REPO}:${BUILD_NUMBER}
                 """
-                echo '✅ Image Docker construite !'
+                echo '✅ Build terminé'
             }
         }
 
-        // 🔥 PUSH ACR
-        stage('Push vers ACR') {
+        // =========================
+        // 3. LOGIN REGISTRIES
+        // =========================
+        stage('Login Registries') {
             steps {
-                echo '📤 Push vers Azure Container Registry...'
-                withCredentials([usernamePassword(
-                    credentialsId: 'acr-credentials',
-                    usernameVariable: 'ACR_USER',
-                    passwordVariable: 'ACR_PASS'
-                )]) {
+                echo '🔐 Connexion aux registries...'
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'acr-credentials',
+                        usernameVariable: 'ACR_USER',
+                        passwordVariable: 'ACR_PASS'
+                    ),
+                    usernamePassword(
+                        credentialsId: 'dockerhub-credentials',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
                     sh """
                         echo "\$ACR_PASS" | docker login ${ACR_SERVER} -u "\$ACR_USER" --password-stdin
-                        docker push ${ACR_REPO}:latest
-                        docker push ${ACR_REPO}:${BUILD_NUMBER}
+                        echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
                     """
                 }
+                echo '✅ Connexion OK'
+            }
+        }
+
+        // =========================
+        // 4. PUSH ACR
+        // =========================
+        stage('Push ACR') {
+            steps {
+                echo '📤 Push vers ACR...'
+                sh """
+                    docker push ${ACR_REPO}:latest
+                    docker push ${ACR_REPO}:${BUILD_NUMBER}
+                """
                 echo '✅ Push ACR OK'
             }
         }
 
-        // 🔥 PUSH DOCKER HUB
-        stage('Push vers Docker Hub') {
+        // =========================
+        // 5. PUSH DOCKER HUB
+        // =========================
+        stage('Push Docker Hub') {
             steps {
                 echo '📤 Push vers Docker Hub...'
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-credentials',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    sh """
-                        echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
-                        docker push ${DOCKERHUB_REPO}:latest
-                        docker push ${DOCKERHUB_REPO}:${BUILD_NUMBER}
-                    """
-                }
+                sh """
+                    docker push ${DOCKERHUB_REPO}:latest
+                    docker push ${DOCKERHUB_REPO}:${BUILD_NUMBER}
+                """
                 echo '✅ Push Docker Hub OK'
             }
         }
 
-        stage('Deploy sur Azure Container Apps') {
+        // =========================
+        // 6. DEPLOY AZURE
+        // =========================
+        stage('Deploy Azure') {
             steps {
                 echo '🚀 Déploiement sur Azure...'
                 withCredentials([
@@ -91,27 +120,34 @@ pipeline {
 
                         az account set --subscription \$SUBSCRIPTION_ID
 
-                        az extension add --name containerapp --upgrade -y 2>/dev/null
+                        az extension add --name containerapp --upgrade -y || true
 
                         az containerapp update \\
                             --name ${CONTAINER_APP} \\
                             --resource-group ${RESOURCE_GROUP} \\
                             --image ${ACR_REPO}:${BUILD_NUMBER}
 
-                        echo "✅ Déploiement terminé !"
+                        echo "✅ Déploiement terminé"
                     """
                 }
             }
         }
 
-        stage('Nettoyage Docker') {
+        // =========================
+        // 7. CLEAN
+        // =========================
+        stage('Cleanup') {
             steps {
-                echo '🧹 Nettoyage...'
+                echo '🧹 Nettoyage Docker...'
                 sh """
+                    docker logout ${ACR_SERVER} || true
+                    docker logout || true
+
                     docker rmi ${ACR_REPO}:latest || true
                     docker rmi ${ACR_REPO}:${BUILD_NUMBER} || true
                     docker rmi ${DOCKERHUB_REPO}:latest || true
                     docker rmi ${DOCKERHUB_REPO}:${BUILD_NUMBER} || true
+
                     docker image prune -f || true
                 """
             }
@@ -120,13 +156,13 @@ pipeline {
 
     post {
         success {
-            echo '🎉 Pipeline réussi !'
+            echo '🎉 Pipeline SUCCESS'
         }
         failure {
-            echo '❌ Pipeline échoué.'
+            echo '❌ Pipeline FAILED'
         }
         always {
-            echo '📊 Pipeline terminé.'
+            echo '📊 Pipeline terminé'
         }
     }
-}
+} 
