@@ -4,6 +4,7 @@ pipeline {
     environment {
         ACR_REPO = 'medibookregistry.azurecr.io/medibook'
         ACR_SERVER = 'medibookregistry.azurecr.io'
+        DOCKERHUB_REPO = 'abdoulayely777/medibook'
         CONTAINER_APP = 'medibook-app'
         RESOURCE_GROUP = 'medibook-rg'
     }
@@ -19,30 +20,56 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                echo '🐳 Build Maven + Construction image Docker...'
+                echo '🐳 Construction de l\'image Docker...'
                 sh """
-                    docker build -t ${ACR_REPO}:latest .
-                    docker build -t ${ACR_REPO}:${BUILD_NUMBER} .
+                    docker build -t ${ACR_REPO}:latest \
+                                 -t ${ACR_REPO}:${BUILD_NUMBER} \
+                                 -t ${DOCKERHUB_REPO}:latest \
+                                 -t ${DOCKERHUB_REPO}:${BUILD_NUMBER} .
                 """
                 echo '✅ Image Docker construite !'
             }
         }
 
-        stage('Push vers Azure Container Registry') {
-            steps {
-                echo '📤 Push de l\'image vers ACR...'
-                withCredentials([usernamePassword(
-                    credentialsId: 'acr-credentials',
-                    usernameVariable: 'ACR_USER',
-                    passwordVariable: 'ACR_PASS'
-                )]) {
-                    sh """
-                        echo "\$ACR_PASS" | docker login ${ACR_SERVER} -u "\$ACR_USER" --password-stdin
-                        docker push ${ACR_REPO}:latest
-                        docker push ${ACR_REPO}:${BUILD_NUMBER}
-                    """
+        stage('Push vers ACR + Docker Hub') {
+            parallel {
+                stage('Push ACR') {
+                    steps {
+                        echo '📤 Push vers Azure Container Registry...'
+                        withCredentials([usernamePassword(
+                            credentialsId: 'acr-credentials',
+                            usernameVariable: 'ACR_USER',
+                            passwordVariable: 'ACR_PASS'
+                        )]) {
+                            sh """
+                                echo "\$ACR_PASS" | docker login ${ACR_SERVER} \
+                                    -u "\$ACR_USER" --password-stdin
+                                docker push ${ACR_REPO}:latest
+                                docker push ${ACR_REPO}:${BUILD_NUMBER}
+                            """
+                        }
+                        echo '✅ Image pushée sur ACR !'
+                    }
                 }
-                echo '✅ Image pushée sur ACR !'
+
+                stage('Push Docker Hub') {
+                    steps {
+                        echo '📤 Push vers Docker Hub...'
+                        withCredentials([usernamePassword(
+                            credentialsId: 'dockerhub-credentials',
+                            usernameVariable: 'DOCKER_USER',
+                            passwordVariable: 'DOCKER_PASS'
+                        )]) {
+                            sh """
+                                echo "\$DOCKER_PASS" | docker login \
+                                    -u "\$DOCKER_USER" --password-stdin
+                                docker push ${DOCKERHUB_REPO}:latest
+                                docker push ${DOCKERHUB_REPO}:${BUILD_NUMBER}
+                            """
+                        }
+                        echo '✅ Image pushée sur Docker Hub !'
+                    }
+                }
             }
         }
 
@@ -84,6 +111,8 @@ pipeline {
                 sh """
                     docker rmi ${ACR_REPO}:latest || true
                     docker rmi ${ACR_REPO}:${BUILD_NUMBER} || true
+                    docker rmi ${DOCKERHUB_REPO}:latest || true
+                    docker rmi ${DOCKERHUB_REPO}:${BUILD_NUMBER} || true
                     docker image prune -f || true
                 """
             }
@@ -92,7 +121,7 @@ pipeline {
 
     post {
         success {
-            echo '🎉 Pipeline réussi ! MediBook déployé sur Azure.'
+            echo '🎉 Pipeline réussi ! MediBook déployé sur Azure + Docker Hub.'
         }
         failure {
             echo '❌ Pipeline échoué. Vérifier les logs ci-dessus.'
