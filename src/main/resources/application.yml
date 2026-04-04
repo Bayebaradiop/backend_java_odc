@@ -23,9 +23,20 @@ spring:
     # locations: classpath:db/migration
     # baseline-on-migrate: true
 
-  mail:
-    host: localhost
-    port: 25
+  management:
+    endpoints:
+      web:
+        exposure:
+          include: health,info,prometheus,metrics
+    endpoint:
+      prometheus:
+        enabled: true
+    metrics:
+      export:
+        prometheus:
+          enabled: true
+    security:
+      enabled: false
 
   # Configuration upload de fichiers
   servlet:

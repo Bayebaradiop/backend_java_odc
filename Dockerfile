@@ -17,14 +17,14 @@ WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 
 # Default environment variables (can be overridden)
-ENV SERVER_PORT=8080
+ENV SERVER_PORT=8085
 ENV DB_HOST=localhost
 ENV DB_PORT=5432
 ENV DB_NAME=medibook
 ENV DB_USERNAME=postgres
 
 # Expose the port (Render expects 8080)
-EXPOSE 8080
+EXPOSE 8085
 
 # Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
