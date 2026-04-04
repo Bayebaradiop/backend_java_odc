@@ -3,47 +3,38 @@ spring:
     name: medibook-api
   profiles:
     active: dev
-  
-  # Base de données - utilise les variables d'environnement Render
   datasource:
     url: jdbc:postgresql://${DB_HOST:dpg-d72rf4c2kvos7382prng-a}:${DB_PORT:5432}/${DB_NAME:medibook_9tzd}
     username: ${DB_USERNAME:medibook_9tzd_user}
     password: ${DB_PASSWORD:M1RKm7TlXd88JRLHeEG9smrAG0fSIiYv}
     driver-class-name: org.postgresql.Driver
-
   jpa:
     open-in-view: false
     hibernate:
       ddl-auto: none
     show-sql: true
-
   flyway:
     enabled: false
-    # enabled: true
-    # locations: classpath:db/migration
-    # baseline-on-migrate: true
-
-  management:
-    endpoints:
-      web:
-        exposure:
-          include: health,info,prometheus,metrics
-    endpoint:
-      prometheus:
-        enabled: true
-    metrics:
-      export:
-        prometheus:
-          enabled: true
-    security:
-      enabled: false
-
-  # Configuration upload de fichiers
   servlet:
     multipart:
       enabled: true
       max-file-size: 10MB
       max-request-size: 10MB
+
+# ⚠️ management doit être au niveau racine, PAS sous spring:
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    prometheus:
+      enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+  m
 
 server:
   port: ${SERVER_PORT:8080}
@@ -61,13 +52,11 @@ jwt:
   secret: ${JWT_SECRET:medibook-secret-key-change-in-production}
   expiration: 86400000
 
-# Configuration Cloudinary
 cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME}
   api-key: ${CLOUDINARY_API_KEY}
   api-secret: ${CLOUDINARY_API_SECRET}
 
-# Brevo (optionnel - peut nécessiter des variables d'environnement)
 brevo:
   api-key: ${BREVO_API_KEY}
   sender-email: ${BREVO_SENDER_EMAIL}
