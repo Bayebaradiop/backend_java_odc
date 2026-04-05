@@ -3,6 +3,7 @@ package com.medibook.patient.controller;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.medibook.cabinet.dto.CabinetResponse;
+import com.medibook.common.dto.PaginatedResponse;
 import com.medibook.patient.message.MessageSucces;
 import com.medibook.patient.service.PatientSearchService;
 import com.medibook.specialite.dto.SpecialiteResponse;
@@ -33,8 +35,11 @@ public class PatientSearchController {
      * GET /api/patient/cabinets - Lister tous les cabinets actifs
      */
     @GetMapping("/cabinets")
-    public ResponseEntity<Map<String, Object>> getAllCabinets() {
-        List<CabinetResponse> cabinets = patientSearchService.getAllCabinets();
+    public ResponseEntity<Map<String, Object>> getAllCabinets(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        PaginatedResponse<CabinetResponse> cabinets = PaginatedResponse.from(
+                patientSearchService.getAllCabinets(PageRequest.of(page, size)));
         return ResponseEntity.ok(Map.of(
                 "message", MessageSucces.CABINETS_LISTE,
                 "data", cabinets
@@ -88,9 +93,12 @@ public class PatientSearchController {
     @GetMapping("/medecins")
     public ResponseEntity<Map<String, Object>> getMedecins(
             @RequestParam(name = "specialite_id", required = false) Long specialiteId,
-            @RequestParam(name = "cabinet_id", required = false) Long cabinetId) {
+            @RequestParam(name = "cabinet_id", required = false) Long cabinetId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
         
-        List<MedecinResponse> medecins = patientSearchService.getMedecins(specialiteId, cabinetId);
+        PaginatedResponse<MedecinResponse> medecins = PaginatedResponse.from(
+                patientSearchService.getMedecins(specialiteId, cabinetId, PageRequest.of(page, size)));
         return ResponseEntity.ok(Map.of(
                 "message", MessageSucces.MEDECINS_LISTE,
                 "data", medecins

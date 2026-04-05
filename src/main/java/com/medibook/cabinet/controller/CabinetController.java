@@ -5,6 +5,7 @@ import com.medibook.cabinet.dto.CabinetResponseDTO;
 import com.medibook.cabinet.message.MessageSucces;
 import com.medibook.cabinet.service.CabinetService;
 import com.medibook.common.dto.ApiStandardResponse;
+import com.medibook.common.dto.PaginatedResponse;
 import com.medibook.common.security.JwtUserUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -15,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -74,8 +76,12 @@ public class CabinetController {
     @Operation(summary = "Récupérer tous les cabinets", description = "Retourne la liste de tous les cabinets")
     @GetMapping
     @PreAuthorize("hasAnyRole('SUPER_ADMIN')")
-    public ResponseEntity<List<CabinetResponseDTO>> getAllCabinets() {
-        return ResponseEntity.ok(cabinetService.getAllCabinets());
+    public ResponseEntity<ApiStandardResponse<PaginatedResponse<CabinetResponseDTO>>> getAllCabinets(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        PaginatedResponse<CabinetResponseDTO> cabinets = PaginatedResponse.from(
+                cabinetService.getAllCabinets(PageRequest.of(page, size)));
+        return ResponseEntity.ok(ApiStandardResponse.successPaginated(cabinets, "Cabinets récupérés avec succès"));
     }
 
     @Operation(summary = "Récupérer un cabinet par ID", description = "Retourne un cabinet spécifique")

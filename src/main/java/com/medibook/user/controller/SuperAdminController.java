@@ -3,11 +3,13 @@ package com.medibook.user.controller;
 import com.medibook.cabinet.dto.CabinetResponseDTO;
 import com.medibook.cabinet.service.CabinetService;
 import com.medibook.common.dto.ApiStandardResponse;
+import com.medibook.common.dto.PaginatedResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -30,8 +32,11 @@ public class SuperAdminController {
     })
     @GetMapping("/cabinets")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
-    public ResponseEntity<ApiStandardResponse<List<CabinetResponseDTO>>> getAllCabinets() {
-        List<CabinetResponseDTO> cabinets = cabinetService.getAllCabinets();
-        return ResponseEntity.ok(ApiStandardResponse.success(cabinets, "Cabinets récupérés avec succès"));
+    public ResponseEntity<ApiStandardResponse<PaginatedResponse<CabinetResponseDTO>>> getAllCabinets(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        PaginatedResponse<CabinetResponseDTO> cabinets = PaginatedResponse.from(
+                cabinetService.getAllCabinets(PageRequest.of(page, size)));
+        return ResponseEntity.ok(ApiStandardResponse.successPaginated(cabinets, "Cabinets récupérés avec succès"));
     }
 }

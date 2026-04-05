@@ -28,6 +28,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 /**
  * Service pour la gestion des médecins
  * Accepte soit un fichier photo
@@ -143,6 +146,13 @@ public class MedecinService {
         return userRepository.findByRoleAndCabinetId(Role.MEDECIN, admin.getCabinet().getId()).stream()
                 .map(userMapper::toResponse)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<UserResponse> getMedecinsByAdmin(Long adminId, Pageable pageable) {
+        Utilisateur admin = validateAdminAndGetCabinet(adminId);
+        return userRepository.findByRoleAndCabinetId(Role.MEDECIN, admin.getCabinet().getId(), pageable)
+                .map(userMapper::toResponse);
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.medibook.rendezvous.controller;
 
 import com.medibook.common.dto.ApiStandardResponse;
+import com.medibook.common.dto.PaginatedResponse;
 import com.medibook.common.enums.StatutRdv;
 import com.medibook.common.security.SecurityService;
 import com.medibook.rendezvous.dto.RendezVousResponse;
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -36,10 +38,13 @@ public class SecretaireRdvController {
     })
     @GetMapping
     @PreAuthorize("hasRole('SECRETAIRE')")
-    public ResponseEntity<ApiStandardResponse<List<RendezVousResponse>>> getRdvCabinet() {
+    public ResponseEntity<ApiStandardResponse<PaginatedResponse<RendezVousResponse>>> getRdvCabinet(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
         Long cabinetId = getCabinetId();
-        List<RendezVousResponse> rdvs = rendezVousService.getRdvCabinet(cabinetId);
-        return ResponseEntity.ok(ApiStandardResponse.success(rdvs, MessageSucces.RDV_LISTE));
+        PaginatedResponse<RendezVousResponse> rdvs = PaginatedResponse.from(
+                rendezVousService.getRdvCabinet(cabinetId, PageRequest.of(page, size)));
+        return ResponseEntity.ok(ApiStandardResponse.successPaginated(rdvs, MessageSucces.RDV_LISTE));
     }
 
     @Operation(summary = "RDV en attente du cabinet", description = "Liste les RDV en attente de confirmation")
@@ -50,10 +55,13 @@ public class SecretaireRdvController {
     })
     @GetMapping("/en-attente")
     @PreAuthorize("hasRole('SECRETAIRE')")
-    public ResponseEntity<ApiStandardResponse<List<RendezVousResponse>>> getRdvEnAttente() {
+    public ResponseEntity<ApiStandardResponse<PaginatedResponse<RendezVousResponse>>> getRdvEnAttente(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
         Long cabinetId = getCabinetId();
-        List<RendezVousResponse> rdvs = rendezVousService.getRdvCabinetParStatut(cabinetId, StatutRdv.EN_ATTENTE);
-        return ResponseEntity.ok(ApiStandardResponse.success(rdvs, MessageSucces.RDV_LISTE));
+        PaginatedResponse<RendezVousResponse> rdvs = PaginatedResponse.from(
+                rendezVousService.getRdvCabinetParStatut(cabinetId, StatutRdv.EN_ATTENTE, PageRequest.of(page, size)));
+        return ResponseEntity.ok(ApiStandardResponse.successPaginated(rdvs, MessageSucces.RDV_LISTE));
     }
 
     @Operation(summary = "Confirmer un RDV", description = "Confirme un rendez-vous en attente du cabinet")

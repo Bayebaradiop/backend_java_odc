@@ -114,6 +114,24 @@ public class ApiStandardResponse<T> {
                 .build();
     }
 
+    /**
+     * Crée une réponse de succès paginée
+     */
+    public static <T> ApiStandardResponse<PaginatedResponse<T>> successPaginated(
+            PaginatedResponse<T> data, String message) {
+        return ApiStandardResponse.<PaginatedResponse<T>>builder()
+                .success(true)
+                .message(message)
+                .data(data)
+                .metadata(Metadata.builder()
+                        .page(data.getPage())
+                        .size(data.getSize())
+                        .totalElements(data.getTotalElements())
+                        .totalPages(data.getTotalPages())
+                        .build())
+                .build();
+    }
+
     // ==================== Méthodes utilitaires d'erreur ====================
 
     /**

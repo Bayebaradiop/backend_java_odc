@@ -25,6 +25,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 /**
  * Service pour la gestion des secrétaires
  * Accepte soit un fichier photo, soit une URL photo
@@ -137,6 +140,13 @@ public class SecretaireService {
         return userRepository.findByRoleAndCabinetId(Role.SECRETAIRE, admin.getCabinet().getId()).stream()
                 .map(userMapper::toResponse)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<UserResponse> getSecretairesByAdmin(Long adminId, Pageable pageable) {
+        Utilisateur admin = validateAdminAndGetCabinet(adminId);
+        return userRepository.findByRoleAndCabinetId(Role.SECRETAIRE, admin.getCabinet().getId(), pageable)
+                .map(userMapper::toResponse);
     }
 
     /**

@@ -25,6 +25,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 /**
  * Service pour la gestion des cabinets
  */
@@ -212,6 +215,12 @@ public class CabinetService {
         return cabinetRepository.findAll().stream()
                 .map(cabinetMapper::toResponseDTO)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CabinetResponseDTO> getAllCabinets(Pageable pageable) {
+        return cabinetRepository.findAll(pageable)
+                .map(cabinetMapper::toResponseDTO);
     }
 
     /**

@@ -2,6 +2,8 @@ package com.medibook.patient.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +44,11 @@ public class PatientSearchService {
                 .stream()
                 .map(cabinetMapper::toCabinetResponse)
                 .toList();
+    }
+
+    public Page<CabinetResponse> getAllCabinets(Pageable pageable) {
+        return cabinetRepository.findByStatus(Cabinet.Status.ACTIF, pageable)
+                .map(cabinetMapper::toCabinetResponse);
     }
 
     
@@ -98,6 +105,25 @@ public class PatientSearchService {
         return medecins.stream()
                 .map(userMapper::toMedecinResponse)
                 .toList();
+    }
+
+    public Page<MedecinResponse> getMedecins(Long specialiteId, Long cabinetId, Pageable pageable) {
+        Page<Utilisateur> medecins;
+
+        if (specialiteId != null && cabinetId != null) {
+            medecins = userRepository.findByRoleAndStatusAndSpecialiteIdAndCabinetId(
+                    Role.MEDECIN, Status.ACTIF, specialiteId, cabinetId, pageable);
+        } else if (specialiteId != null) {
+            medecins = userRepository.findByRoleAndStatusAndSpecialiteId(
+                    Role.MEDECIN, Status.ACTIF, specialiteId, pageable);
+        } else if (cabinetId != null) {
+            medecins = userRepository.findByRoleAndStatusAndCabinetId(
+                    Role.MEDECIN, Status.ACTIF, cabinetId, pageable);
+        } else {
+            medecins = userRepository.findByRoleAndStatus(Role.MEDECIN, Status.ACTIF, pageable);
+        }
+
+        return medecins.map(userMapper::toMedecinResponse);
     }
 
     

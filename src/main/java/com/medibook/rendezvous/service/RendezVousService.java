@@ -3,6 +3,8 @@ package com.medibook.rendezvous.service;
 import java.util.List;
 import java.time.LocalTime;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -117,6 +119,13 @@ public class RendezVousService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public Page<RendezVousResponse> getMesRendezVous(Pageable pageable) {
+        Utilisateur patient = securityService.getUtilisateurConnecte();
+        return rendezVousRepository.findByPatientIdOrderByIdDesc(patient.getId(), pageable)
+                .map(mapper::toRendezVousResponse);
+    }
+
     
         // Mes RDV en attente
      
@@ -127,6 +136,13 @@ public class RendezVousService {
                 .stream()
                 .map(mapper::toRendezVousResponse)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<RendezVousResponse> getMesRendezVousEnAttente(Pageable pageable) {
+        Utilisateur patient = securityService.getUtilisateurConnecte();
+        return rendezVousRepository.findByPatientIdAndStatut(patient.getId(), StatutRdv.EN_ATTENTE, pageable)
+                .map(mapper::toRendezVousResponse);
     }
 
 
@@ -142,6 +158,13 @@ public class RendezVousService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
+    public Page<RendezVousResponse> getMesRendezVousConfirmes(Pageable pageable) {
+        Utilisateur patient = securityService.getUtilisateurConnecte();
+        return rendezVousRepository.findByPatientIdAndStatut(patient.getId(), StatutRdv.CONFIRME, pageable)
+                .map(mapper::toRendezVousResponse);
+    }
+
 
     
      //Historique (terminés + annulés)
@@ -155,6 +178,15 @@ public class RendezVousService {
                 .stream()
                 .map(mapper::toRendezVousResponse)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<RendezVousResponse> getHistorique(Pageable pageable) {
+        Utilisateur patient = securityService.getUtilisateurConnecte();
+        return rendezVousRepository.findByPatientIdAndStatutInOrderByIdDesc(
+                        patient.getId(),
+                        List.of(StatutRdv.TERMINE, StatutRdv.ANNULE), pageable)
+                .map(mapper::toRendezVousResponse);
     }
 
 
@@ -185,10 +217,24 @@ public class RendezVousService {
     }
 
     @Transactional(readOnly = true)
+    public Page<RendezVousResponse> getRdvMedecin(Pageable pageable) {
+        Utilisateur medecin = securityService.getUtilisateurConnecte();
+        return rendezVousRepository.findByMedecinIdOrderByIdDesc(medecin.getId(), pageable)
+                .map(mapper::toRendezVousResponse);
+    }
+
+    @Transactional(readOnly = true)
     public List<RendezVousResponse> getRdvMedecinEnAttente() {
         Utilisateur medecin = securityService.getUtilisateurConnecte();
         return rendezVousRepository.findByMedecinIdAndStatut(medecin.getId(), StatutRdv.EN_ATTENTE)
                 .stream().map(mapper::toRendezVousResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<RendezVousResponse> getRdvMedecinEnAttente(Pageable pageable) {
+        Utilisateur medecin = securityService.getUtilisateurConnecte();
+        return rendezVousRepository.findByMedecinIdAndStatut(medecin.getId(), StatutRdv.EN_ATTENTE, pageable)
+                .map(mapper::toRendezVousResponse);
     }
 
     public RendezVousResponse confirmerRdv(Long rdvId) {
@@ -228,9 +274,21 @@ public class RendezVousService {
     }
 
     @Transactional(readOnly = true)
+    public Page<RendezVousResponse> getRdvCabinet(Long cabinetId, Pageable pageable) {
+        return rendezVousRepository.findByCabinetIdOrderByIdDesc(cabinetId, pageable)
+                .map(mapper::toRendezVousResponse);
+    }
+
+    @Transactional(readOnly = true)
     public List<RendezVousResponse> getRdvCabinetParStatut(Long cabinetId, StatutRdv statut) {
         return rendezVousRepository.findByCabinetIdAndStatut(cabinetId, statut)
                 .stream().map(mapper::toRendezVousResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<RendezVousResponse> getRdvCabinetParStatut(Long cabinetId, StatutRdv statut, Pageable pageable) {
+        return rendezVousRepository.findByCabinetIdAndStatut(cabinetId, statut, pageable)
+                .map(mapper::toRendezVousResponse);
     }
 
     public RendezVousResponse confirmerRdvParSecretaire(Long rdvId, Long cabinetId) {

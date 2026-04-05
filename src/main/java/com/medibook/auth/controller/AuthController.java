@@ -26,6 +26,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 import lombok.RequiredArgsConstructor;
 
@@ -47,7 +48,7 @@ public class AuthController {
         @ApiResponse(responseCode = "403", description = "Compte inactif")
     })
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
         AuthService.AuthResult result = authService.login(request);
 
         ResponseCookie cookie = cookieUtil.createTokenCookie(
@@ -68,7 +69,7 @@ public class AuthController {
         @ApiResponse(responseCode = "400", description = "Email ou téléphone déjà utilisé")
     })
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
         AuthService.AuthResult result = authService.register(request);
 
         ResponseCookie cookie = cookieUtil.createTokenCookie(
@@ -102,7 +103,7 @@ public class AuthController {
 
     @Operation(summary = "Modifier mon profil", description = "Met à jour les informations du profil connecté")
     @PutMapping("/profile")
-    public ResponseEntity<?> updateProfile(@RequestBody UserRequest request) {
+    public ResponseEntity<?> updateProfile(@Valid @RequestBody UserRequest request) {
         return ResponseEntity.ok(userService.updateProfile(request));
     }
 

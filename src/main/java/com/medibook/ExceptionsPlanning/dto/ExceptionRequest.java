@@ -3,6 +3,8 @@ package com.medibook.ExceptionsPlanning.dto;
 import com.medibook.common.enums.TypeException;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
 
@@ -24,11 +26,14 @@ public record ExceptionRequest(
         TypeException type,
 
         @Schema(description = "Heure de début (HH:mm), optionnel pour une journée entière", example = "09:00")
+        @Pattern(regexp = "^([01]\\d|2[0-3]):[0-5]\\d$", message = "L'heure de début doit être au format HH:mm")
         String heureDebut,
 
         @Schema(description = "Heure de fin (HH:mm), optionnel pour une journée entière", example = "12:00")
+        @Pattern(regexp = "^([01]\\d|2[0-3]):[0-5]\\d$", message = "L'heure de fin doit être au format HH:mm")
         String heureFin,
 
         @Schema(description = "Motif de l'exception", example = "Congé annuel")
+        @Size(max = 500, message = "Le motif ne peut pas dépasser 500 caractères")
         String motif
 ) {}

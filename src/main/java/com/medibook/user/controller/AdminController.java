@@ -4,6 +4,7 @@ import com.medibook.cabinet.dto.CabinetResponseDTO;
 import com.medibook.cabinet.entity.Cabinet;
 import com.medibook.cabinet.mapper.CabinetMapper;
 import com.medibook.common.dto.ApiStandardResponse;
+import com.medibook.common.dto.PaginatedResponse;
 import com.medibook.common.security.JwtUserUtil;
 import com.medibook.user.dto.MedecinRequest;
 import com.medibook.user.dto.SecretaireRequest;
@@ -20,6 +21,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -91,9 +93,13 @@ public class AdminController {
     @Operation(summary = "Liste des médecins", description = "Retourne tous les médecins du cabinet")
     @GetMapping("/medecins")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<UserResponse>> getMedecins() {
+    public ResponseEntity<ApiStandardResponse<PaginatedResponse<UserResponse>>> getMedecins(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
         Long userId = jwtUserUtil.getCurrentUserId();
-        return ResponseEntity.ok(medecinService.getMedecinsByAdmin(userId));
+        PaginatedResponse<UserResponse> medecins = PaginatedResponse.from(
+                medecinService.getMedecinsByAdmin(userId, PageRequest.of(page, size)));
+        return ResponseEntity.ok(ApiStandardResponse.successPaginated(medecins, "Médecins récupérés avec succès"));
     }
 
     @Operation(summary = "Récupérer un médecin par ID")
@@ -177,9 +183,13 @@ public class AdminController {
     @Operation(summary = "Liste des secrétaires", description = "Retourne tous les secrétaires du cabinet")
     @GetMapping("/secretaires")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<UserResponse>> getSecretaires() {
+    public ResponseEntity<ApiStandardResponse<PaginatedResponse<UserResponse>>> getSecretaires(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
         Long userId = jwtUserUtil.getCurrentUserId();
-        return ResponseEntity.ok(secretaireService.getSecretairesByAdmin(userId));
+        PaginatedResponse<UserResponse> secretaires = PaginatedResponse.from(
+                secretaireService.getSecretairesByAdmin(userId, PageRequest.of(page, size)));
+        return ResponseEntity.ok(ApiStandardResponse.successPaginated(secretaires, "Secrétaires récupérés avec succès"));
     }
 
     @Operation(summary = "Récupérer un/e secretary par ID")
