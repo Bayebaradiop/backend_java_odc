@@ -1,41 +1,51 @@
--- V2__update_exceptions_planning.sql
-
--- Ajouter gestion période
+-- V3__update_exceptions_planning.sql
+-- Ajouter colonnes seulement si elles n'existent pas
 ALTER TABLE exceptions_planning
-ADD COLUMN date_debut DATE,
-ADD COLUMN date_fin DATE;
+    ADD COLUMN IF NOT EXISTS date_debut DATE,
+    ADD COLUMN IF NOT EXISTS date_fin DATE,
+    ADD COLUMN IF NOT EXISTS heure_debut TIME,
+    ADD COLUMN IF NOT EXISTS heure_fin TIME;
 
--- Ajouter gestion plage horaire
-ALTER TABLE exceptions_planning
-ADD COLUMN heure_debut TIME,
-ADD COLUMN heure_fin TIME;
+-- Copier la valeur existante "date" vers date_debut si la colonne existe encore
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name='exceptions_planning' AND column_name='date'
+    ) THEN
+        UPDATE exceptions_planning SET date_debut = date;
+        UPDATE exceptions_planning SET date_fin = date_debut WHERE date_fin IS NULL;
+        ALTER TABLE exceptions_planning DROP COLUMN date;
+    END IF;
+END $$;
 
--- Copier la valeur existante "date" vers date_debut
-UPDATE exceptions_planning
-SET date_debut = date;
+-- Contraintes (ignore si elles existent déjà)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'chk_exception_dates'
+    ) THEN
+        ALTER TABLE exceptions_planning
+        ADD CONSTRAINT chk_exception_dates
+        CHECK (date_fin >= date_debut);
+    END IF;
+END $$;
 
--- Si date_fin est NULL on met la même date
-UPDATE exceptions_planning
-SET date_fin = date_debut
-WHERE date_fin IS NULL;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'chk_exception_heures'
+    ) THEN
+        ALTER TABLE exceptions_planning
+        ADD CONSTRAINT chk_exception_heures
+        CHECK (
+            (heure_debut IS NULL AND heure_fin IS NULL)
+            OR
+            (heure_debut IS NOT NULL AND heure_fin IS NOT NULL AND heure_fin > heure_debut)
+        );
+    END IF;
+END $$;
 
--- Supprimer l'ancienne colonne
-ALTER TABLE exceptions_planning
-DROP COLUMN date;
-
--- Contraintes de cohérence
-ALTER TABLE exceptions_planning
-ADD CONSTRAINT chk_exception_dates
-CHECK (date_fin >= date_debut);
-
-ALTER TABLE exceptions_planning
-ADD CONSTRAINT chk_exception_heures
-CHECK (
-    (heure_debut IS NULL AND heure_fin IS NULL)
-    OR
-    (heure_debut IS NOT NULL AND heure_fin IS NOT NULL AND heure_fin > heure_debut)
-);
-
--- Index important pour la recherche
-CREATE INDEX idx_exception_medecin_dates
+-- Index (ignore si il existe déjà)
+CREATE INDEX IF NOT EXISTS idx_exception_medecin_dates
 ON exceptions_planning(medecin_id, date_debut, date_fin);
