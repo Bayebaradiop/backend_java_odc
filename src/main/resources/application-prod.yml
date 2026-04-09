@@ -17,6 +17,10 @@ management:
   endpoint:
     prometheus:
       enabled: true
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
   prometheus:
     metrics:
       export:
