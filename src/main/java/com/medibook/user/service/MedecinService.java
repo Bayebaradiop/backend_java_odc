@@ -6,6 +6,7 @@ import com.medibook.common.enums.Role;
 import com.medibook.common.enums.Status;
 import com.medibook.common.event.MedecinCreatedEvent;
 import com.medibook.common.exception.BusinessException;
+import com.medibook.common.monitoring.MediBookMetricsRecorder;
 import com.medibook.common.exception.ResourceNotFoundException;
 import com.medibook.common.storage.MediaUploadService;
 import com.medibook.specialite.entity.Specialite;
@@ -41,6 +42,7 @@ public class MedecinService {
     private final MediaUploadService mediaUploadService;
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
+    private final MediBookMetricsRecorder metricsRecorder;
 
     /**
      * Crée un médecin - accepte fichier photo uploadé vers Cloudinary
@@ -70,6 +72,7 @@ public class MedecinService {
         // 6. Sauvegarder d'abord pour avoir l'ID
         Utilisateur savedMedecin = userRepository.save(medecin);
         log.info("Médecin créé: {} pour le cabinet {}", savedMedecin.getEmail(), admin.getCabinet().getNom());
+        metricsRecorder.recordUserCreated(Role.MEDECIN);
 
         // 7. Gérer la photo: upload vers Cloudinary si fichier fourni
         handlePhotoCreation(savedMedecin, photoFile);

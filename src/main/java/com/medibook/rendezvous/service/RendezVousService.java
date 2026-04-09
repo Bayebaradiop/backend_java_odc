@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.medibook.ExceptionsPlanning.entity.ExceptionsPlanning;
 import com.medibook.ExceptionsPlanning.repository.ExceptionsPlanningRepository;
 import com.medibook.common.enums.StatutRdv;
+import com.medibook.common.monitoring.MediBookMetricsRecorder;
 import com.medibook.common.security.SecurityService;
 import com.medibook.creneau.entity.Creneau;
 import com.medibook.creneau.repository.CreneauRepository;
@@ -33,6 +34,7 @@ public class RendezVousService {
     private final ExceptionsPlanningRepository exceptionsPlanningRepository;
     private final SecurityService securityService;
     private final RendezVousMapper mapper;
+    private final MediBookMetricsRecorder metricsRecorder;
 
     
      // Créer un RDV (patient connecté)
@@ -69,7 +71,9 @@ public class RendezVousService {
         creneauRepository.save(creneau);
 
         // Sauvegarder et retourner
-        return mapper.toRendezVousResponse(rendezVousRepository.save(rdv));
+        RendezVous savedRdv = rendezVousRepository.save(rdv);
+        metricsRecorder.recordRendezVousEvent("created", "patient");
+        return mapper.toRendezVousResponse(savedRdv);
     }
     
 
@@ -101,7 +105,9 @@ public class RendezVousService {
             creneauRepository.save(rdv.getCreneau());
         }
 
-        return mapper.toRendezVousResponse(rendezVousRepository.save(rdv));
+        RendezVous savedRdv = rendezVousRepository.save(rdv);
+        metricsRecorder.recordRendezVousEvent("cancelled", "patient");
+        return mapper.toRendezVousResponse(savedRdv);
     }
 
 
@@ -202,7 +208,9 @@ public class RendezVousService {
             throw new IllegalStateException(MessageErreur.CONFIRMATION_IMPOSSIBLE);
         }
         rdv.setStatut(StatutRdv.CONFIRME);
-        return mapper.toRendezVousResponse(rendezVousRepository.save(rdv));
+        RendezVous savedRdv = rendezVousRepository.save(rdv);
+        metricsRecorder.recordRendezVousEvent("confirmed", "medecin");
+        return mapper.toRendezVousResponse(savedRdv);
     }
 
     public RendezVousResponse terminerRdv(Long rdvId) {
@@ -216,7 +224,9 @@ public class RendezVousService {
             throw new IllegalStateException(MessageErreur.TERMINAISON_IMPOSSIBLE);
         }
         rdv.setStatut(StatutRdv.TERMINE);
-        return mapper.toRendezVousResponse(rendezVousRepository.save(rdv));
+        RendezVous savedRdv = rendezVousRepository.save(rdv);
+        metricsRecorder.recordRendezVousEvent("completed", "medecin");
+        return mapper.toRendezVousResponse(savedRdv);
     }
 
     // ===== Méthodes Secrétaire =====
@@ -243,7 +253,9 @@ public class RendezVousService {
             throw new IllegalStateException(MessageErreur.CONFIRMATION_IMPOSSIBLE);
         }
         rdv.setStatut(StatutRdv.CONFIRME);
-        return mapper.toRendezVousResponse(rendezVousRepository.save(rdv));
+        RendezVous savedRdv = rendezVousRepository.save(rdv);
+        metricsRecorder.recordRendezVousEvent("confirmed", "secretaire");
+        return mapper.toRendezVousResponse(savedRdv);
     }
 
     public RendezVousResponse annulerRdvParSecretaire(Long rdvId, Long cabinetId) {
@@ -260,7 +272,9 @@ public class RendezVousService {
             rdv.getCreneau().setDisponible(true);
             creneauRepository.save(rdv.getCreneau());
         }
-        return mapper.toRendezVousResponse(rendezVousRepository.save(rdv));
+        RendezVous savedRdv = rendezVousRepository.save(rdv);
+        metricsRecorder.recordRendezVousEvent("cancelled", "secretaire");
+        return mapper.toRendezVousResponse(savedRdv);
     }
 
     private boolean hasBlockingException(Creneau creneau) {

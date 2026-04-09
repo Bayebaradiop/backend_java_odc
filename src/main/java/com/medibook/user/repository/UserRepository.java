@@ -51,4 +51,5 @@ public interface UserRepository extends JpaRepository<Utilisateur, Long> {
     // Comptages pour stats
     long countByRoleAndCabinetId(Role role, Long cabinetId);
     long countByRole(Role role);
+    long countByRoleAndStatus(Role role, Status status);
 }

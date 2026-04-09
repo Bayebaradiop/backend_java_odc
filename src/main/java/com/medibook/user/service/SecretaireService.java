@@ -5,6 +5,7 @@ import com.medibook.common.enums.Role;
 import com.medibook.common.enums.Status;
 import com.medibook.common.event.SecretaireCreatedEvent;
 import com.medibook.common.exception.BusinessException;
+import com.medibook.common.monitoring.MediBookMetricsRecorder;
 import com.medibook.common.exception.ResourceNotFoundException;
 import com.medibook.common.storage.MediaUploadService;
 import com.medibook.user.dto.SecretaireRequest;
@@ -36,6 +37,7 @@ public class SecretaireService {
     private final MediaUploadService mediaUploadService;
     private final PasswordEncoder passwordEncoder;
     private final ApplicationEventPublisher eventPublisher;
+    private final MediBookMetricsRecorder metricsRecorder;
 
     /**
      * Crée un nouveau secretary pour le cabinet de l'admin
@@ -59,6 +61,7 @@ public class SecretaireService {
         // 6. Sauvegarder d'abord pour avoir l'ID
         Utilisateur savedSecretaire = userRepository.save(secretaire);
         log.info("Secrétaire créé: {} pour le cabinet {}", savedSecretaire.getEmail(), admin.getCabinet().getNom());
+        metricsRecorder.recordUserCreated(Role.SECRETAIRE);
 
         // 7. Gérer la photo: fichier uploadé vers Cloudinary
         handlePhotoCreation(savedSecretaire, photoFile);
