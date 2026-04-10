@@ -9,6 +9,7 @@ import com.medibook.auth.dto.RegisterRequest;
 import com.medibook.auth.message.MessageErreur;
 import com.medibook.common.enums.Role;
 import com.medibook.common.enums.Status;
+import com.medibook.common.monitoring.MediBookMetricsRecorder;
 import com.medibook.common.security.JwtTokenProvider;
 import com.medibook.user.entity.Utilisateur;
 import com.medibook.user.repository.UserRepository;
@@ -22,24 +23,31 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final MediBookMetricsRecorder metricsRecorder;
 
     // --- LOGIN ---
     public AuthResult login(LoginRequest request) {
         // 1. Chercher l'utilisateur par email
         Utilisateur user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException(MessageErreur.EMAIL_NON_TROUVE));
+                .orElseThrow(() -> {
+                    metricsRecorder.recordLoginFailure("email_not_found");
+                    return new RuntimeException(MessageErreur.EMAIL_NON_TROUVE);
+                });
 
         // 2. Vérifier le mot de passe
         if (!passwordEncoder.matches(request.getMotDePasse(), user.getMotDePasse())) {
+            metricsRecorder.recordLoginFailure("invalid_password");
             throw new RuntimeException(MessageErreur.MDP_INCORRECT);
         }
 
         // 3. Vérifier que le compte est actif
         if (user.getStatus() != Status.ACTIF) {
+            metricsRecorder.recordLoginFailure("inactive_account");
             throw new RuntimeException(MessageErreur.COMPTE_INACTIF);
         }
 
         // 4. Générer le token + construire la réponse
+        metricsRecorder.recordLoginSuccess();
         return buildAuthResult(user);
     }
     
@@ -68,6 +76,7 @@ public class AuthService {
                 .build();
 
         userRepository.save(user);
+        metricsRecorder.recordRegistration(Role.PATIENT);
 
         // 4. Générer le token + construire la réponse
         return buildAuthResult(user);

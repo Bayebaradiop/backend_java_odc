@@ -11,6 +11,7 @@ import com.medibook.user.dto.SecretaireRequest;
 import com.medibook.user.dto.UserResponse;
 import com.medibook.user.entity.Utilisateur;
 import com.medibook.user.repository.UserRepository;
+import com.medibook.user.message.MessageSucces;
 import com.medibook.user.service.MedecinService;
 import com.medibook.user.service.SecretaireService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -87,7 +88,7 @@ public class AdminController {
         Long userId = jwtUserUtil.getCurrentUserId();
         UserResponse response = medecinService.createMedecin(request, photo, userId);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiStandardResponse.success(response, "Médecin créé avec succès"));
+                .body(ApiStandardResponse.success(response, MessageSucces.MEDECIN_CREE));
     }
 
     @Operation(summary = "Liste des médecins", description = "Retourne tous les médecins du cabinet")
@@ -126,7 +127,7 @@ public class AdminController {
         
         Long userId = jwtUserUtil.getCurrentUserId();
         UserResponse response = medecinService.updateMedecin(medecinId, request, photo, userId);
-        return ResponseEntity.ok(ApiStandardResponse.success(response, "Médecin mis à jour avec succès"));
+        return ResponseEntity.ok(ApiStandardResponse.success(response, MessageSucces.MEDECIN_MODIFIE));
     }
 
     @Operation(summary = "Supprimer un médecin")
@@ -138,7 +139,7 @@ public class AdminController {
         
         Long userId = jwtUserUtil.getCurrentUserId();
         medecinService.deleteMedecin(medecinId, userId);
-        return ResponseEntity.ok(ApiStandardResponse.success(null, "Médecin supprimé avec succès"));
+        return ResponseEntity.ok(ApiStandardResponse.success(null, MessageSucces.MEDECIN_SUPPRIME));
     }
 
     @Operation(summary = "Activer/Désactiver un médecin")
@@ -150,7 +151,7 @@ public class AdminController {
         
         Long userId = jwtUserUtil.getCurrentUserId();
         UserResponse response = medecinService.toggleMedecinStatus(medecinId, userId);
-        return ResponseEntity.ok(ApiStandardResponse.success(response, "Statut du médecin mis à jour"));
+        return ResponseEntity.ok(ApiStandardResponse.success(response, MessageSucces.MEDECIN_STATUT_MODIFIE));
     }
 
     // ==================== SECRÉTAIRES ====================
@@ -177,7 +178,7 @@ public class AdminController {
         Long userId = jwtUserUtil.getCurrentUserId();
         UserResponse response = secretaireService.createSecretaire(request, photo, userId);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiStandardResponse.success(response, "Secrétaire créé avec succès"));
+                .body(ApiStandardResponse.success(response, MessageSucces.SECRETAIRE_CREE));
     }
 
     @Operation(summary = "Liste des secrétaires", description = "Retourne tous les secrétaires du cabinet")
@@ -216,7 +217,7 @@ public class AdminController {
         
         Long userId = jwtUserUtil.getCurrentUserId();
         UserResponse response = secretaireService.updateSecretaire(secretaireId, request, photo, userId);
-        return ResponseEntity.ok(ApiStandardResponse.success(response, "Secrétaire mis à jour avec succès"));
+        return ResponseEntity.ok(ApiStandardResponse.success(response, MessageSucces.SECRETAIRE_MODIFIE));
     }
 
     @Operation(summary = "Supprimer un/e secretary")
@@ -228,7 +229,7 @@ public class AdminController {
         
         Long userId = jwtUserUtil.getCurrentUserId();
         secretaireService.deleteSecretaire(secretaireId, userId);
-        return ResponseEntity.ok(ApiStandardResponse.success(null, "Secrétaire supprimé avec succès"));
+        return ResponseEntity.ok(ApiStandardResponse.success(null, MessageSucces.SECRETAIRE_SUPPRIME));
     }
 
     @Operation(summary = "Activer/Désactiver un/e secretary")
@@ -240,6 +241,6 @@ public class AdminController {
         
         Long userId = jwtUserUtil.getCurrentUserId();
         UserResponse response = secretaireService.toggleSecretaireStatus(secretaireId, userId);
-        return ResponseEntity.ok(ApiStandardResponse.success(response, "Statut du/de la secretary mis à jour"));
+        return ResponseEntity.ok(ApiStandardResponse.success(response, MessageSucces.SECRETAIRE_STATUT_MODIFIE));
     }
 }

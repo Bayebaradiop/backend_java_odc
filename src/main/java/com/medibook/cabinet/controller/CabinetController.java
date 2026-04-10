@@ -70,7 +70,7 @@ public class CabinetController {
         
         CabinetResponseDTO response = cabinetService.createCabinet(dto, logo, userId);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiStandardResponse.success(response, "Cabinet créé avec succès"));
+                .body(ApiStandardResponse.success(response, MessageSucces.CABINET_CREE));
     }
 
     @Operation(summary = "Récupérer tous les cabinets", description = "Retourne la liste de tous les cabinets")
@@ -102,7 +102,7 @@ public class CabinetController {
         
         Long userId = jwtUserUtil.getCurrentUserId();
         CabinetResponseDTO response = cabinetService.updateCabinet(id, dto, logo, userId);
-        return ResponseEntity.ok(ApiStandardResponse.success(response, "Cabinet mis à jour avec succès"));
+        return ResponseEntity.ok(ApiStandardResponse.success(response, MessageSucces.CABINET_MODIFIE));
     }
 
     @Operation(summary = "Supprimer un cabinet", description = "Supprime un cabinet. Réservé au Super Admin.")

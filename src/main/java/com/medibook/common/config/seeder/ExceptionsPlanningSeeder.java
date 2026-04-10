@@ -69,6 +69,7 @@ public class ExceptionsPlanningSeeder implements Seeder {
                 ExceptionsPlanning exception = ExceptionsPlanning.builder()
                         .medecin(medecin)
                         .date(jourFerie)
+                        .date(jourFerie)
                         .type(TypeException.FERME)
                         .build();
                 exceptionsPlanningRepository.save(exception);
@@ -84,6 +85,7 @@ public class ExceptionsPlanningSeeder implements Seeder {
             ExceptionsPlanning vacances = ExceptionsPlanning.builder()
                     .medecin(medecin)
                     .date(date)
+                    .date(date)
                     .type(TypeException.VACANCES)
                     .build();
             exceptionsPlanningRepository.save(vacances);
@@ -94,6 +96,7 @@ public class ExceptionsPlanningSeeder implements Seeder {
         LocalDate absence1 = LocalDate.now().plusWeeks(1);
         ExceptionsPlanning absence = ExceptionsPlanning.builder()
                 .medecin(medecin)
+                .date(absence1)
                 .date(absence1)
                 .type(TypeException.ABSENT)
                 .build();
@@ -109,6 +112,7 @@ public class ExceptionsPlanningSeeder implements Seeder {
             for (LocalDate date = debutVac2; date.isBefore(debutVac2.plusDays(7)); date = date.plusDays(1)) {
                 ExceptionsPlanning vacances2 = ExceptionsPlanning.builder()
                         .medecin(medecin2)
+                        .date(date)
                         .date(date)
                         .type(TypeException.VACANCES)
                         .build();

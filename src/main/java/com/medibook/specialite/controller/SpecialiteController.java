@@ -4,6 +4,7 @@ import com.medibook.common.dto.ApiStandardResponse;
 import com.medibook.common.security.JwtUserUtil;
 import com.medibook.specialite.dto.SpecialiteRequest;
 import com.medibook.specialite.dto.SpecialiteResponse;
+import com.medibook.specialite.message.MessageSucces;
 import com.medibook.specialite.service.SpecialiteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -51,7 +52,7 @@ public class SpecialiteController {
         Long userId = jwtUserUtil.getCurrentUserId();
         SpecialiteResponse response = specialiteService.createSpecialite(request, userId);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiStandardResponse.success(response, "Spécialité créée avec succès"));
+                .body(ApiStandardResponse.success(response, MessageSucces.SPECIALITE_CREE));
     }
 
     @Operation(summary = "Liste des spécialités", description = "Retourne toutes les spécialités du cabinet de l'admin")
@@ -98,7 +99,7 @@ public class SpecialiteController {
         }
         
         SpecialiteResponse response = specialiteService.updateSpecialite(specialiteId, request, userId);
-        return ResponseEntity.ok(ApiStandardResponse.success(response, "Spécialité mise à jour avec succès"));
+        return ResponseEntity.ok(ApiStandardResponse.success(response, MessageSucces.SPECIALITE_MODIFIEE));
     }
 
     @Operation(
@@ -123,6 +124,6 @@ public class SpecialiteController {
         }
         
         specialiteService.deleteSpecialite(specialiteId, userId);
-        return ResponseEntity.ok(ApiStandardResponse.success(null, "Spécialité supprimée avec succès"));
+        return ResponseEntity.ok(ApiStandardResponse.success(null, MessageSucces.SPECIALITE_SUPPRIMEE));
     }
 }
