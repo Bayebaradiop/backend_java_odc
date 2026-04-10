@@ -12,8 +12,8 @@ public class CookieUtil {
     public ResponseCookie createTokenCookie(String token, long maxAgeSeconds) {
         return ResponseCookie.from(COOKIE_NAME, token)
                 .httpOnly(true)  
-                .secure(false)         
-                .sameSite("Strict")  
+                .secure(true)         
+                .sameSite("None")  
                 .path("/")             
                 .maxAge(maxAgeSeconds) 
                 .build();
@@ -23,8 +23,8 @@ public class CookieUtil {
     public ResponseCookie deleteTokenCookie() {
         return ResponseCookie.from(COOKIE_NAME, "")
                 .httpOnly(true)
-                .secure(false)
-                .sameSite("Strict")
+                .secure(true)
+                .sameSite("None")
                 .path("/")
                 .maxAge(0)         
                 .build();
