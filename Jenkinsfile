@@ -23,7 +23,7 @@ pipeline {
         // =========================
         stage('Checkout') {
             steps {
-                echo '📥 Checkout du code...'
+                echo ' Checkout du code...'
                 checkout scm
             }
         }
