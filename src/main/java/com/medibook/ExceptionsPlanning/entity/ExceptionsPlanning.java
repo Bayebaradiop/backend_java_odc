@@ -28,8 +28,11 @@ public class ExceptionsPlanning {
     @JoinColumn(name = "medecin_id", nullable = false)
     private Utilisateur medecin;
 
-    @Column(nullable = false)
-    private LocalDate date;
+    @Column(name = "date_debut", nullable = false)
+    private LocalDate dateDebut;
+
+    @Column(name = "date_fin")
+    private LocalDate dateFin;
 
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)

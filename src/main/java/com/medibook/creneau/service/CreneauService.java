@@ -61,7 +61,7 @@ public class CreneauService {
         }
 
         Map<LocalDate, List<ExceptionsPlanning>> exceptionsParDate = exceptions.stream()
-                .collect(Collectors.groupingBy(ExceptionsPlanning::getDate));
+                .collect(Collectors.groupingBy(ExceptionsPlanning::getDateDebut));
 
         return creneaux.stream()
                 .filter(creneau -> !isBlockedByException(

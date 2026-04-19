@@ -68,8 +68,8 @@ public class ExceptionsPlanningSeeder implements Seeder {
             if (!jourFerie.isBefore(LocalDate.now().minusDays(30))) {
                 ExceptionsPlanning exception = ExceptionsPlanning.builder()
                         .medecin(medecin)
-                        .date(jourFerie)
-                        .date(jourFerie)
+                        .dateDebut(jourFerie)
+                        .dateFin(jourFerie)
                         .type(TypeException.FERME)
                         .build();
                 exceptionsPlanningRepository.save(exception);
@@ -84,8 +84,8 @@ public class ExceptionsPlanningSeeder implements Seeder {
         for (LocalDate date = debutVacances; !date.isAfter(finVacances); date = date.plusDays(1)) {
             ExceptionsPlanning vacances = ExceptionsPlanning.builder()
                     .medecin(medecin)
-                    .date(date)
-                    .date(date)
+                    .dateDebut(date)
+                    .dateFin(date)
                     .type(TypeException.VACANCES)
                     .build();
             exceptionsPlanningRepository.save(vacances);
@@ -96,8 +96,8 @@ public class ExceptionsPlanningSeeder implements Seeder {
         LocalDate absence1 = LocalDate.now().plusWeeks(1);
         ExceptionsPlanning absence = ExceptionsPlanning.builder()
                 .medecin(medecin)
-                .date(absence1)
-                .date(absence1)
+                .dateDebut(absence1)
+                .dateFin(absence1)
                 .type(TypeException.ABSENT)
                 .build();
         exceptionsPlanningRepository.save(absence);
@@ -112,8 +112,8 @@ public class ExceptionsPlanningSeeder implements Seeder {
             for (LocalDate date = debutVac2; date.isBefore(debutVac2.plusDays(7)); date = date.plusDays(1)) {
                 ExceptionsPlanning vacances2 = ExceptionsPlanning.builder()
                         .medecin(medecin2)
-                        .date(date)
-                        .date(date)
+                        .dateDebut(date)
+                        .dateFin(date)
                         .type(TypeException.VACANCES)
                         .build();
                 exceptionsPlanningRepository.save(vacances2);

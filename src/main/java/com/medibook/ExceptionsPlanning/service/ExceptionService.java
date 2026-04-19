@@ -117,7 +117,8 @@ public class ExceptionService {
 
         ExceptionsPlanning exception = ExceptionsPlanning.builder()
                 .medecin(medecin)
-                .date(request.date())
+                .dateDebut(request.date())
+                .dateFin(request.date())
                 .type(request.type())
                 .heureDebut(heureDebut)
                 .heureFin(heureFin)
