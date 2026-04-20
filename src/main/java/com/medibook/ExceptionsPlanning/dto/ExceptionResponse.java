@@ -1,5 +1,6 @@
 package com.medibook.ExceptionsPlanning.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.medibook.common.enums.TypeException;
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -20,8 +21,11 @@ public record ExceptionResponse(
         @Schema(description = "Nom complet du médecin", example = "Dr. Dupont Jean")
         String medecinNom,
 
-        @Schema(description = "Date de l'exception", example = "2025-01-20")
-        LocalDate date,
+        @Schema(description = "Date de début de l'exception", example = "2025-01-20")
+        LocalDate dateDebut,
+
+        @Schema(description = "Date de fin de l'exception", example = "2025-01-22")
+        LocalDate dateFin,
 
         @Schema(description = "Type d'exception", example = "ABSENT")
         TypeException type,
@@ -34,4 +38,9 @@ public record ExceptionResponse(
 
         @Schema(description = "Motif de l'exception", example = "Congé annuel")
         String motif
-) {}
+) {
+    @JsonProperty("date")
+    public LocalDate date() {
+        return dateDebut;
+    }
+}

@@ -1,5 +1,6 @@
 package com.medibook.ExceptionsPlanning.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.medibook.common.enums.TypeException;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
@@ -17,9 +18,13 @@ public record ExceptionRequest(
         @Schema(description = "ID du médecin (optionnel si médecin connecté)", example = "1")
         Long medecinId,
 
-        @Schema(description = "Date de l'exception", example = "2025-01-20")
-        @NotNull(message = "La date est obligatoire")
-        LocalDate date,
+        @Schema(description = "Date de début de l'exception", example = "2025-01-20")
+        @JsonAlias("date")
+        @NotNull(message = "La date de début est obligatoire")
+        LocalDate dateDebut,
+
+        @Schema(description = "Date de fin de l'exception", example = "2025-01-22")
+        LocalDate dateFin,
 
         @Schema(description = "Type d'exception", example = "ABSENT")
         @NotNull(message = "Le type d'exception est obligatoire")
@@ -36,4 +41,8 @@ public record ExceptionRequest(
         @Schema(description = "Motif de l'exception", example = "Congé annuel")
         @Size(max = 500, message = "Le motif ne peut pas dépasser 500 caractères")
         String motif
-) {}
+) {
+    public LocalDate getDateFinOrDefault() {
+        return dateFin != null ? dateFin : dateDebut;
+    }
+}

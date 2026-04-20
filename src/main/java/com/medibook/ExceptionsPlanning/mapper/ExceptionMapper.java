@@ -16,6 +16,7 @@ public class ExceptionMapper {
                         ? exception.getMedecin().getPrenom() + " " + exception.getMedecin().getNom()
                         : null,
                 exception.getDateDebut(),
+                exception.getDateFin(),
                 exception.getType(),
                 exception.getHeureDebut() != null ? exception.getHeureDebut().toString() : null,
                 exception.getHeureFin() != null ? exception.getHeureFin().toString() : null,

@@ -62,12 +62,18 @@ public class SecurityConfig {
                 .authenticationEntryPoint((request, response, authException) -> {
                     response.setStatus(401);
                     response.setContentType("application/json");
-                    response.getWriter().write("{\"error\": \"Non authentifié. Veuillez vous connecter.\"}");
+                    response.getWriter().write(
+                            "{\"success\":false,\"message\":\"Non authentifié. Veuillez vous connecter.\","
+                                    + "\"error\":{\"code\":\"ERR_UNAUTHORIZED\","
+                                    + "\"description\":\"Non authentifié. Veuillez vous connecter.\"}}");
                 })
                 .accessDeniedHandler((request, response, accessDeniedException) -> {
                     response.setStatus(403);
                     response.setContentType("application/json");
-                    response.getWriter().write("{\"error\": \"Accès refusé. Permissions insuffisantes.\"}");
+                    response.getWriter().write(
+                            "{\"success\":false,\"message\":\"Accès refusé. Permissions insuffisantes.\","
+                                    + "\"error\":{\"code\":\"ERR_FORBIDDEN\","
+                                    + "\"description\":\"Accès refusé. Permissions insuffisantes.\"}}");
                 })
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

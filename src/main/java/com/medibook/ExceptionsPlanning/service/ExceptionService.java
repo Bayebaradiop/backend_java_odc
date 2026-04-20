@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalTime;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -110,15 +111,18 @@ public class ExceptionService {
     // ========== Méthodes privées ==========
 
     private ExceptionResponse sauvegarderException(Utilisateur medecin, ExceptionRequest request) {
+        LocalDate dateDebut = request.dateDebut();
+        LocalDate dateFin = request.getDateFinOrDefault();
         LocalTime heureDebut = parseTime(request.heureDebut());
         LocalTime heureFin = parseTime(request.heureFin());
 
-        validateHeures(heureDebut, heureFin);
+        validateDates(dateDebut, dateFin);
+        validateHeures(dateDebut, dateFin, heureDebut, heureFin);
 
         ExceptionsPlanning exception = ExceptionsPlanning.builder()
                 .medecin(medecin)
-                .dateDebut(request.date())
-                .dateFin(request.date())
+                .dateDebut(dateDebut)
+                .dateFin(dateFin)
                 .type(request.type())
                 .heureDebut(heureDebut)
                 .heureFin(heureFin)
@@ -126,7 +130,7 @@ public class ExceptionService {
                 .build();
 
         ExceptionsPlanning saved = exceptionRepository.save(exception);
-        log.info("Exception de planning créée pour le médecin {} le {}", medecin.getEmail(), request.date());
+        log.info("Exception de planning créée pour le médecin {} du {} au {}", medecin.getEmail(), dateDebut, dateFin);
         return exceptionMapper.toResponse(saved);
     }
 
@@ -135,7 +139,17 @@ public class ExceptionService {
         return LocalTime.parse(time);
     }
 
-    private void validateHeures(LocalTime heureDebut, LocalTime heureFin) {
+    private void validateDates(LocalDate dateDebut, LocalDate dateFin) {
+        if (dateFin.isBefore(dateDebut)) {
+            throw new BusinessException(MessageErreur.DATE_FIN_INVALIDE);
+        }
+    }
+
+    private void validateHeures(LocalDate dateDebut, LocalDate dateFin, LocalTime heureDebut, LocalTime heureFin) {
+        if (dateFin.isAfter(dateDebut) && (heureDebut != null || heureFin != null)) {
+            throw new BusinessException(MessageErreur.HEURES_INTERDITES_PERIODE);
+        }
+
         if (heureDebut != null && heureFin != null && !heureFin.isAfter(heureDebut)) {
             throw new BusinessException(MessageErreur.HEURE_INVALIDE);
         }
