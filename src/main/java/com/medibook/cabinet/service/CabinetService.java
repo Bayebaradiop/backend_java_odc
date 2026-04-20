@@ -230,6 +230,12 @@ public class CabinetService {
     public CabinetResponseDTO getCabinetById(Long id) {
         Cabinet cabinet = cabinetRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(MessageErreur.CABINET_NON_TROUVE));
+        
+        // Chercher l'admin du cabinet
+        List<Utilisateur> admins = userRepository.findByRoleAndCabinetId(Role.ADMIN, cabinet.getId());
+        if (!admins.isEmpty()) {
+            return buildResponseWithAdmin(cabinet, admins.get(0));
+        }
         return cabinetMapper.toResponseDTO(cabinet);
     }
 

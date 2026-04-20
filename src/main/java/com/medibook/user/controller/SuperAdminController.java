@@ -5,7 +5,10 @@ import com.medibook.cabinet.service.CabinetService;
 import com.medibook.common.dto.ApiStandardResponse;
 import com.medibook.common.dto.PaginatedResponse;
 import com.medibook.common.enums.Role;
+import com.medibook.common.enums.Status;
+import com.medibook.common.exception.ResourceNotFoundException;
 import com.medibook.user.dto.UserResponse;
+import com.medibook.user.entity.Utilisateur;
 import com.medibook.user.mapper.UserMapper;
 import com.medibook.user.repository.UserRepository;
 import io.swagger.v3.oas.annotations.Operation;
@@ -61,5 +64,24 @@ public class SuperAdminController {
                 userRepository.findByRole(Role.ADMIN, PageRequest.of(page, size))
                         .map(userMapper::toResponse));
         return ResponseEntity.ok(ApiStandardResponse.successPaginated(admins, "Admins récupérés avec succès"));
+    }
+
+    @Operation(summary = "Activer/Désactiver un admin", description = "Bascule le statut d'un administrateur de cabinet")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Statut modifié avec succès"),
+            @ApiResponse(responseCode = "404", description = "Admin non trouvé")
+    })
+    @PatchMapping("/admins/{id}/toggle-status")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<ApiStandardResponse<UserResponse>> toggleAdminStatus(@PathVariable Long id) {
+        Utilisateur admin = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Admin non trouvé"));
+        
+        admin.setStatus(admin.getStatus() == Status.ACTIF ? Status.INACTIF : Status.ACTIF);
+        Utilisateur saved = userRepository.save(admin);
+        
+        return ResponseEntity.ok(ApiStandardResponse.success(
+                userMapper.toResponse(saved),
+                "Statut de l'admin modifié avec succès"));
     }
 }

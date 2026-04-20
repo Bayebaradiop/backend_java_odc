@@ -1,10 +1,13 @@
 package com.medibook.rendezvous.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.medibook.common.enums.StatutRdv;
@@ -60,4 +63,12 @@ public interface RendezVousRepository extends JpaRepository<RendezVous, Long> {
     Page<RendezVous> findByCabinetIdOrderByIdDesc(Long cabinetId, Pageable pageable);
     List<RendezVous> findByCabinetIdAndStatut(Long cabinetId, StatutRdv statut);
     Page<RendezVous> findByCabinetIdAndStatut(Long cabinetId, StatutRdv statut, Pageable pageable);
+
+    // RDV confirmés pour une date donnée (rappels)
+    @Query("SELECT r FROM RendezVous r " +
+           "JOIN FETCH r.patient " +
+           "JOIN FETCH r.medecin " +
+           "JOIN FETCH r.creneau c " +
+           "WHERE c.date = :date AND r.statut = :statut")
+    List<RendezVous> findByCreneauDateAndStatut(@Param("date") LocalDate date, @Param("statut") StatutRdv statut);
 }
