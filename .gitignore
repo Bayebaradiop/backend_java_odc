@@ -55,3 +55,11 @@ application-local.yml
 application-dev.yml
 application.yml
 docker-compose.yml
+
+### Secrets & Terraform ###
+secrets/
+*.json
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.*
+infra/terraform.tfvars

@@ -33,13 +33,28 @@ pipeline {
         // =========================
         stage('Build Docker Image') {
             steps {
-                echo '🐳 Build image Docker...'
-                sh """
-                    docker build -t ${ACR_REPO}:latest .
-                    docker build -t ${ACR_REPO}:${BUILD_NUMBER} .
+                sh 'docker info'
+            }
+        }
 
-                    docker tag ${ACR_REPO}:latest ${DOCKERHUB_REPO}:latest
-                    docker tag ${ACR_REPO}:${BUILD_NUMBER} ${DOCKERHUB_REPO}:${BUILD_NUMBER}
+        stage('Build Image') {
+            steps {
+                script {
+                    def commit = sh(
+                        script: "git rev-parse --short HEAD",
+                        returnStdout: true
+                    ).trim()
+
+                    env.COMMIT_TAG = commit
+                    echo "Commit utilisé : ${COMMIT_TAG}"
+                }
+
+                sh """
+                    docker build -t ${ACR_REPO}:${COMMIT_TAG} .
+                    docker tag ${ACR_REPO}:${COMMIT_TAG} ${ACR_REPO}:latest
+
+                    docker tag ${ACR_REPO}:${COMMIT_TAG} ${DOCKERHUB_REPO}:${COMMIT_TAG}
+                    docker tag ${ACR_REPO}:${COMMIT_TAG} ${DOCKERHUB_REPO}:latest
                 """
                 echo '✅ Build terminé'
             }
@@ -72,31 +87,22 @@ pipeline {
             }
         }
 
-        // =========================
-        // 4. PUSH ACR
-        // =========================
-        stage('Push ACR') {
-            steps {
-                echo '📤 Push vers ACR...'
-                sh """
-                    docker push ${ACR_REPO}:latest
-                    docker push ${ACR_REPO}:${BUILD_NUMBER}
-                """
-                echo '✅ Push ACR OK'
-            }
-        }
-
-        // =========================
-        // 5. PUSH DOCKER HUB
-        // =========================
-        stage('Push Docker Hub') {
-            steps {
-                echo '📤 Push vers Docker Hub...'
-                sh """
-                    docker push ${DOCKERHUB_REPO}:latest
-                    docker push ${DOCKERHUB_REPO}:${BUILD_NUMBER}
-                """
-                echo '✅ Push Docker Hub OK'
+        stage('Push Images') {
+            parallel {
+                stage('Push ACR') {
+                    steps {
+                        sh """
+                            docker push ${ACR_REPO}:${COMMIT_TAG}
+                        """
+                    }
+                }
+                stage('Push DockerHub') {
+                    steps {
+                        sh """
+                            docker push ${DOCKERHUB_REPO}:${COMMIT_TAG}
+                        """
+                    }
+                }
             }
         }
 
@@ -120,14 +126,10 @@ pipeline {
 
                         az account set --subscription \$SUBSCRIPTION_ID
 
-                        az extension add --name containerapp --upgrade -y || true
-
-                        az containerapp update \\
-                            --name ${CONTAINER_APP} \\
-                            --resource-group ${RESOURCE_GROUP} \\
-                            --image ${ACR_REPO}:${BUILD_NUMBER}
-
-                        echo "✅ Déploiement terminé"
+                        az containerapp update \
+                            --name ${CONTAINER_APP} \
+                            --resource-group ${RESOURCE_GROUP} \
+                            --image ${ACR_REPO}:${COMMIT_TAG}
                     """
                 }
             }
