@@ -71,6 +71,17 @@ public class SecretaireExceptionController {
                 .body(ApiStandardResponse.success(response, MessageSucces.EXCEPTION_CREEE));
     }
 
+    @Operation(summary = "Modifier une exception de planning", description = "Modifie une exception de planning d'un médecin")
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('SECRETAIRE')")
+    public ResponseEntity<ApiStandardResponse<ExceptionResponse>> modifierException(
+            @Parameter(description = "ID de l'exception") @PathVariable Long id,
+            @Valid @RequestBody ExceptionRequest request) {
+        Long userId = jwtUserUtil.getCurrentUserId();
+        ExceptionResponse response = exceptionService.modifierExceptionSecretaire(id, request, userId);
+        return ResponseEntity.ok(ApiStandardResponse.success(response, "Exception de planning mise à jour avec succès"));
+    }
+
     @Operation(summary = "Supprimer une exception de planning", description = "Supprime une exception de planning d'un médecin")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = MessageSucces.EXCEPTION_SUPPRIMEE),

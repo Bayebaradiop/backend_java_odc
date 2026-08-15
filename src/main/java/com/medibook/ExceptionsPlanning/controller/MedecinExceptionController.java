@@ -63,6 +63,16 @@ public class MedecinExceptionController {
                 .body(ApiStandardResponse.success(response, MessageSucces.EXCEPTION_CREEE));
     }
 
+    @Operation(summary = "Modifier une exception de planning", description = "Modifie une exception de planning appartenant au médecin connecté")
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('MEDECIN')")
+    public ResponseEntity<ApiStandardResponse<ExceptionResponse>> modifierException(
+            @Parameter(description = "ID de l'exception") @PathVariable Long id,
+            @Valid @RequestBody ExceptionRequest request) {
+        ExceptionResponse response = exceptionService.modifierExceptionMedecin(id, request);
+        return ResponseEntity.ok(ApiStandardResponse.success(response, "Exception de planning mise à jour avec succès"));
+    }
+
     @Operation(summary = "Supprimer une exception de planning", description = "Supprime une exception de planning appartenant au médecin connecté")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = MessageSucces.EXCEPTION_SUPPRIMEE),
