@@ -59,7 +59,15 @@ docker-compose.yml
 ### Secrets & Terraform ###
 secrets/
 *.json
-infra/.terraform/
-infra/*.tfstate
-infra/*.tfstate.*
-infra/terraform.tfvars
+.terraform/
+**/infra/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+crash.log
+crash.*.log
