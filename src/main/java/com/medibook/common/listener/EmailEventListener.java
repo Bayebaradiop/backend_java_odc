@@ -38,4 +38,14 @@ public class EmailEventListener {
         log.info("Événement SecretaireCreatedEvent reçu pour: {}", event.getSecretaire().getEmail());
         emailService.sendSecretaireCreationEmail(event);
     }
+
+    /**
+     * Écoute l'événement d'annulation de RDV suite à une exception du médecin et envoie l'email au patient
+     */
+    @Async
+    @EventListener
+    public void handleRendezVousAnnuleException(com.medibook.common.event.RendezVousAnnuleExceptionEvent event) {
+        log.info("Événement RendezVousAnnuleExceptionEvent reçu pour le patient: {}", event.getRendezVous().getPatient().getEmail());
+        emailService.sendRendezVousAnnuleExceptionEmail(event);
+    }
 }

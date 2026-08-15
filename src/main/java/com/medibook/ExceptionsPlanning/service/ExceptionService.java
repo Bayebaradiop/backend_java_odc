@@ -7,15 +7,21 @@ import com.medibook.ExceptionsPlanning.mapper.ExceptionMapper;
 import com.medibook.ExceptionsPlanning.message.MessageErreur;
 import com.medibook.ExceptionsPlanning.repository.ExceptionsPlanningRepository;
 import com.medibook.common.enums.Role;
+import com.medibook.common.enums.StatutRdv;
+import com.medibook.common.enums.TypeException;
+import com.medibook.common.event.RendezVousAnnuleExceptionEvent;
 import com.medibook.common.exception.BusinessException;
 import com.medibook.common.exception.ResourceNotFoundException;
 import com.medibook.common.security.SecurityService;
 import com.medibook.creneau.entity.Creneau;
 import com.medibook.creneau.repository.CreneauRepository;
+import com.medibook.rendezvous.entity.RendezVous;
+import com.medibook.rendezvous.repository.RendezVousRepository;
 import com.medibook.user.entity.Utilisateur;
 import com.medibook.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +43,8 @@ public class ExceptionService {
     private final ExceptionMapper exceptionMapper;
     private final SecurityService securityService;
     private final CreneauRepository creneauRepository;
+    private final RendezVousRepository rendezVousRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * Crée une exception de planning pour le médecin connecté
@@ -161,10 +169,6 @@ public class ExceptionService {
 
     // ========== Méthodes privées ==========
 
-    private ExceptionResponse me(ExceptionsPlanning exception, ExceptionRequest request) {
-        return mettreAJourException(exception, request);
-    }
-
     private ExceptionResponse mettreAJourException(ExceptionsPlanning exception, ExceptionRequest request) {
         Utilisateur medecin = exception.getMedecin();
         LocalDate oldStart = exception.getDateDebut();
@@ -191,8 +195,8 @@ public class ExceptionService {
 
         // 1. Libérer l'ancienne période
         libererCreneauxImpactes(medecin, oldStart, oldEnd, oldHStart, oldHEnd);
-        // 2. Verrouiller la nouvelle période
-        bloquerCreneauxImpactes(medecin, newStart, newEnd, newHStart, newHEnd);
+        // 2. Verrouiller la nouvelle période & Notifier les patients par EventListener
+        bloquerCreneauxEtNotifierPatients(medecin, newStart, newEnd, newHStart, newHEnd, request.type(), request.motif());
 
         log.info("Exception {} mise à jour pour le médecin {}", exception.getId(), medecin.getEmail());
         return exceptionMapper.toResponse(saved);
@@ -219,14 +223,23 @@ public class ExceptionService {
 
         ExceptionsPlanning saved = exceptionRepository.save(exception);
 
-        // Bloquer automatiquement tous les créneaux libres qui tombent pendant l'exception
-        bloquerCreneauxImpactes(medecin, dateDebut, dateFin, heureDebut, heureFin);
+        // Bloquer les créneaux et annuler + notifier par EventListener tous les RDV réservés impactés
+        bloquerCreneauxEtNotifierPatients(medecin, dateDebut, dateFin, heureDebut, heureFin, request.type(), request.motif());
 
         log.info("Exception de planning créée pour le médecin {} du {} au {}", medecin.getEmail(), dateDebut, dateFin);
         return exceptionMapper.toResponse(saved);
     }
 
-    private void bloquerCreneauxImpactes(Utilisateur medecin, LocalDate dateDebut, LocalDate dateFin, LocalTime heureDebut, LocalTime heureFin) {
+    private void bloquerCreneauxEtNotifierPatients(
+            Utilisateur medecin, 
+            LocalDate dateDebut, 
+            LocalDate dateFin, 
+            LocalTime heureDebut, 
+            LocalTime heureFin,
+            TypeException type,
+            String motif) {
+
+        // 1. Bloquer les créneaux libres dans cette plage
         List<Creneau> creneaux = creneauRepository.findByMedecinIdAndDateBetween(medecin.getId(), dateDebut, dateFin);
         List<Creneau> toUpdate = new ArrayList<>();
 
@@ -243,7 +256,34 @@ public class ExceptionService {
 
         if (!toUpdate.isEmpty()) {
             creneauRepository.saveAll(toUpdate);
-            log.info("{} créneaux rendus indisponibles suite à la création d'exception pour le médecin {}", toUpdate.size(), medecin.getEmail());
+            log.info("{} créneaux rendus indisponibles suite à l'exception pour le médecin {}", toUpdate.size(), medecin.getEmail());
+        }
+
+        // 2. Traiter les RendezVous déjà réservés impactés (Annulation + publication d'événement Spring)
+        List<RendezVous> rdvsImpactes = rendezVousRepository.findRendezVousImpactesParException(medecin.getId(), dateDebut, dateFin);
+        List<RendezVous> rdvsToAnnuler = new ArrayList<>();
+
+        for (RendezVous rdv : rdvsImpactes) {
+            boolean matchTime = true;
+            if (heureDebut != null && heureFin != null && rdv.getCreneau() != null) {
+                matchTime = rdv.getCreneau().getHeureDebut().isBefore(heureFin) && rdv.getCreneau().getHeureFin().isAfter(heureDebut);
+            }
+
+            if (matchTime) {
+                rdv.setStatut(StatutRdv.ANNULE);
+                rdvsToAnnuler.add(rdv);
+            }
+        }
+
+        if (!rdvsToAnnuler.isEmpty()) {
+            rendezVousRepository.saveAll(rdvsToAnnuler);
+            log.info("{} rendez-vous ont été annulés suite à l'exception du médecin {}", rdvsToAnnuler.size(), medecin.getEmail());
+
+            // Publication des événements Spring pour déclencher l'envoi d'emails via EventListener
+            for (RendezVous rdv : rdvsToAnnuler) {
+                eventPublisher.publishEvent(new RendezVousAnnuleExceptionEvent(rdv, motif, type != null ? type.name() : "EXCEPTION"));
+                log.info("Événement RendezVousAnnuleExceptionEvent publié pour le RDV ID {}", rdv.getId());
+            }
         }
     }
 

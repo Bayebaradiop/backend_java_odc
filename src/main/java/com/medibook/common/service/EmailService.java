@@ -55,6 +55,52 @@ public class EmailService {
         }
     }
 
+    /**
+     * Envoie un email d'annulation d'un RDV à un patient suite à une indisponibilité exception du médecin
+     */
+    @Async
+    public void sendRendezVousAnnuleExceptionEmail(com.medibook.common.event.RendezVousAnnuleExceptionEvent event) {
+        try {
+            var rdv = event.getRendezVous();
+            var patient = rdv.getPatient();
+            var medecin = rdv.getMedecin();
+            var creneau = rdv.getCreneau();
+
+            String patientNom = buildNomComplet(patient.getPrenom(), patient.getNom());
+            String medecinNom = buildNomComplet(medecin.getPrenom(), medecin.getNom());
+            String dateRdv = creneau != null ? creneau.getDate().toString() : "N/A";
+            String heureRdv = creneau != null ? creneau.getHeureDebut().toString() : "N/A";
+            String motif = event.getMotifException() != null && !event.getMotifException().isBlank()
+                    ? event.getMotifException()
+                    : "Absence / Indisponibilité exceptionnelle du praticien";
+
+            String message = String.format(
+                    "Bonjour %s,\n\n" +
+                    "Nous vous informons que votre rendez-vous du %s à %s avec le Dr %s a dû être annulé en raison d'une indisponibilité exceptionnelle du praticien (%s).\n\n" +
+                    "Ce créneau n'est par conséquent plus disponible.\n" +
+                    "Nous vous invitons chaleureusement à vous connecter sur MediBook afin de réserver un nouveau créneau qui vous convient :\n" +
+                    "%s/patient/rendezvous\n\n" +
+                    "Veuillez nous excuser pour ce désagrément.\n\n" +
+                    "L'équipe MediBook",
+                    patientNom,
+                    dateRdv,
+                    heureRdv,
+                    medecinNom,
+                    motif,
+                    frontUrl
+            );
+
+            brevoMailService.sendEmail(
+                    patient.getEmail(),
+                    "[MediBook] Annulation de votre rendez-vous du " + dateRdv,
+                    message
+            );
+            log.info("Email d'annulation pour exception envoyé avec succès au patient {}", patient.getEmail());
+        } catch (Exception e) {
+            log.error("Échec de l'envoi de l'email d'annulation d'exception à {}: {}", event.getRendezVous().getPatient().getEmail(), e.getMessage());
+        }
+    }
+
     private String buildMedecinWelcomeEmail(MedecinCreatedEvent event) {
         String nomComplet = buildNomComplet(event.getMedecin().getPrenom(), event.getMedecin().getNom());
 

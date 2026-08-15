@@ -71,4 +71,17 @@ public interface RendezVousRepository extends JpaRepository<RendezVous, Long> {
            "JOIN FETCH r.creneau c " +
            "WHERE c.date = :date AND r.statut = :statut")
     List<RendezVous> findByCreneauDateAndStatut(@Param("date") LocalDate date, @Param("statut") StatutRdv statut);
+
+    // RDV à venir d'un médecin impactés par une plage de dates d'exception
+    @Query("SELECT r FROM RendezVous r " +
+           "JOIN FETCH r.patient " +
+           "JOIN FETCH r.medecin " +
+           "JOIN FETCH r.creneau c " +
+           "WHERE r.medecin.id = :medecinId " +
+           "AND c.date BETWEEN :dateDebut AND :dateFin " +
+           "AND r.statut IN ('CONFIRME', 'EN_ATTENTE')")
+    List<RendezVous> findRendezVousImpactesParException(
+            @Param("medecinId") Long medecinId,
+            @Param("dateDebut") LocalDate dateDebut,
+            @Param("dateFin") LocalDate dateFin);
 }
