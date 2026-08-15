@@ -227,7 +227,7 @@ public class CreneauGenerationService {
             creneauRepository.saveAll(creneaux);
         }
 
-        log.info("Regénération terminée pour le médecin {}: {} nouveaux créneaux",
-                medecinId, creneaux.size());
+        log.info("Regénération terminée pour le médecin {}: {} jours traités",
+                medecinId, joursGeneres);
     }
 }
