@@ -1,7 +1,5 @@
 package com.medibook.specialite.service;
 
-import com.medibook.cabinet.entity.Cabinet;
-import com.medibook.cabinet.repository.CabinetRepository;
 import com.medibook.common.enums.Role;
 import com.medibook.common.exception.BusinessException;
 import com.medibook.common.exception.FieldValidationException;
@@ -30,7 +28,6 @@ import java.util.Map;
 public class SpecialiteService {
 
     private final SpecialiteRepository specialiteRepository;
-    private final CabinetRepository cabinetRepository;
     private final UserRepository userRepository;
     private final SpecialiteMapper specialiteMapper;
 
@@ -198,15 +195,7 @@ public class SpecialiteService {
         }
     }
 
-    // ==================== Méthodes utilitaires ====================
 
-    /**
-     * Trouve un cabinet par ID
-     */
-    private Cabinet findCabinetById(Long id) {
-        return cabinetRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException(com.medibook.specialite.message.MessageErreur.CABINET_NON_TROUVE));
-    }
 
     /**
      * Trouve une spécialité par ID
