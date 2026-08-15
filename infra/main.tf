@@ -28,7 +28,7 @@ resource "azurerm_container_registry" "acr" {
 }
 
 resource "azurerm_postgresql_flexible_server" "postgres" {
-  name                   = "medibook-db-${random_string.suffix.result}"
+  name                   = "medibook-db-w453e4"
   resource_group_name    = azurerm_resource_group.rg.name
   location               = azurerm_resource_group.rg.location
   version                = "15"
@@ -60,7 +60,7 @@ resource "azurerm_postgresql_flexible_server_database" "db" {
 }
 
 resource "azurerm_log_analytics_workspace" "logs" {
-  name                = "medibook-logs-${random_string.suffix.result}"
+  name                = "medibook-logs-w453e4"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   sku                 = "PerGB2018"
