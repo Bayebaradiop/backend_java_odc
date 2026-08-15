@@ -49,7 +49,7 @@ public class CloudinaryStorageService implements StorageService {
         }
         
         try {
-            Map<String, Object> params = ObjectUtils.asMap(
+            Map<String, Object> params = Map.of(
                     "folder", folder,
                     "resource_type", "image",
                     "public_id", fileName
