@@ -42,6 +42,7 @@ public class RendezVous {
     @JoinColumn(name = "creneau_id", nullable = true)
     private Creneau creneau;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(nullable = false, columnDefinition = "statusRdv")

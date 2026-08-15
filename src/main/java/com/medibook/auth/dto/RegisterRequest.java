@@ -11,27 +11,27 @@ import lombok.Data;
 @Schema(description = "Requête d'inscription d'un nouveau patient")
 public class RegisterRequest {
     
-    @Schema(description = "Prénom de l'utilisateur", example = "Jean", required = true)
+    @Schema(description = "Prénom de l'utilisateur", example = "Jean", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "Le prénom est obligatoire")
     @Size(max = 100, message = "Le prénom ne peut pas dépasser 100 caractères")
     private String prenom;
     
-    @Schema(description = "Nom de l'utilisateur", example = "Dupont", required = true)
+    @Schema(description = "Nom de l'utilisateur", example = "Dupont", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "Le nom est obligatoire")
     @Size(max = 100, message = "Le nom ne peut pas dépasser 100 caractères")
     private String nom;
     
-    @Schema(description = "Adresse email", example = "jean.dupont@email.com", required = true)
+    @Schema(description = "Adresse email", example = "jean.dupont@email.com", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "L'email est obligatoire")
     @Email(message = "L'adresse email est invalide")
     private String email;
     
-    @Schema(description = "Numéro de téléphone", example = "+221771234567", required = true)
+    @Schema(description = "Numéro de téléphone", example = "+221771234567", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "Le téléphone est obligatoire")
     @Pattern(regexp = "^[+]?[0-9][0-9\\s\\-()]{7,19}$", message = "Le numéro de téléphone est invalide")
     private String telephone;
     
-    @Schema(description = "Mot de passe", example = "123456", required = true)
+    @Schema(description = "Mot de passe", example = "123456", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotBlank(message = "Le mot de passe est obligatoire")
     @Size(min = 6, message = "Le mot de passe doit contenir au moins 6 caractères")
     private String motDePasse;

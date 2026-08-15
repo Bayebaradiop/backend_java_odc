@@ -41,6 +41,7 @@ public class Creneau {
     @OneToOne(fetch = FetchType.LAZY, mappedBy = "creneau", cascade = CascadeType.ALL)
     private RendezVous rendezVous;
 
+    @Builder.Default
     @Column(nullable = false)
     private Boolean disponible = true;
 }

@@ -42,6 +42,7 @@ public class Cabinet {
 
     private String email;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(nullable = false, columnDefinition = "statut_enum")
