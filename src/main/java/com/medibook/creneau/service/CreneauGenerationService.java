@@ -30,6 +30,7 @@ public class CreneauGenerationService {
     private final CreneauRepository creneauRepository;
     private final PlanningRepository planningRepository;
     private final UserRepository userRepository;
+    private final com.medibook.ExceptionsPlanning.repository.ExceptionsPlanningRepository exceptionsPlanningRepository;
 
     // Constantes de configuration
     private static final int JOURS_GENERATION = 30;
@@ -103,16 +104,20 @@ public class CreneauGenerationService {
     private void generateCreneauxForDay(TemplateSemaine template, Utilisateur medecin,
                                         LocalDate date, List<Creneau> creneaux) {
         LocalTime currentTime = template.getHeureDebut();
+        List<com.medibook.ExceptionsPlanning.entity.ExceptionsPlanning> exceptionsDay = 
+                exceptionsPlanningRepository.findByMedecinIdAndDate(medecin.getId(), date);
 
         while (isTimeSlotValid(currentTime, template)) {
             LocalTime heureFin = currentTime.plusMinutes(template.getDureeCreneau());
+
+            boolean blockedByException = isSlotBlockedByException(currentTime, heureFin, exceptionsDay);
 
             Creneau creneau = Creneau.builder()
                     .medecin(medecin)
                     .date(date)
                     .heureDebut(currentTime)
                     .heureFin(heureFin)
-                    .disponible(true)
+                    .disponible(!blockedByException)
                     .build();
 
             creneaux.add(creneau);
@@ -125,6 +130,19 @@ public class CreneauGenerationService {
 
             currentTime = heureFin;
         }
+    }
+
+    private boolean isSlotBlockedByException(LocalTime creneauDebut, LocalTime creneauFin,
+                                             List<com.medibook.ExceptionsPlanning.entity.ExceptionsPlanning> exceptions) {
+        for (com.medibook.ExceptionsPlanning.entity.ExceptionsPlanning ex : exceptions) {
+            if (ex.getHeureDebut() == null || ex.getHeureFin() == null) {
+                return true; // Exception sur la journée entière
+            }
+            if (creneauDebut.isBefore(ex.getHeureFin()) && creneauFin.isAfter(ex.getHeureDebut())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

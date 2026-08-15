@@ -32,6 +32,7 @@ public class PlanningService {
     private final UserRepository userRepository;
     private final PlanningMapper planningMapper;
     private final ApplicationEventPublisher eventPublisher;
+    private final com.medibook.planning.validator.PlanningValidator planningValidator;
 
     /**
      * Crée un template de planning hebdomadaire pour un médecin
@@ -51,6 +52,10 @@ public class PlanningService {
         // 4. Parser les heures
         LocalTime heureDebut = LocalTime.parse(request.heureDebut());
         LocalTime heureFin = LocalTime.parse(request.heureFin());
+
+        // 4b. Valider le non-chevauchement des horaires pour ce jour de semaine
+        List<TemplateSemaine> existingTemplates = planningRepository.findByMedecinIdAndJourSemaine(medecin.getId(), request.jourSemaine());
+        planningValidator.validateNonOverlapping(existingTemplates, heureDebut, heureFin);
 
         // 5. Créer le template
         TemplateSemaine template = buildTemplate(medecin, request, heureDebut, heureFin);

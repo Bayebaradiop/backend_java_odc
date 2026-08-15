@@ -11,4 +11,5 @@ public interface PlanningRepository extends JpaRepository<TemplateSemaine, Long>
 
     List<TemplateSemaine> findByMedecinId(Long medecinId);
 
+    List<TemplateSemaine> findByMedecinIdAndJourSemaine(Long medecinId, com.medibook.common.enums.JourSemaine jourSemaine);
 }

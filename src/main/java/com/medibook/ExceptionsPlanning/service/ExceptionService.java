@@ -33,6 +33,7 @@ public class ExceptionService {
     private final UserRepository userRepository;
     private final ExceptionMapper exceptionMapper;
     private final SecurityService securityService;
+    private final com.medibook.creneau.repository.CreneauRepository creneauRepository;
 
     /**
      * Crée une exception de planning pour le médecin connecté
@@ -130,8 +131,33 @@ public class ExceptionService {
                 .build();
 
         ExceptionsPlanning saved = exceptionRepository.save(exception);
+
+        // Bloquer automatiquement tous les créneaux libres qui tombent pendant l'exception
+        bloquerCreneauxImpactes(medecin, dateDebut, dateFin, heureDebut, heureFin);
+
         log.info("Exception de planning créée pour le médecin {} du {} au {}", medecin.getEmail(), dateDebut, dateFin);
         return exceptionMapper.toResponse(saved);
+    }
+
+    private void bloquerCreneauxImpactes(Utilisateur medecin, LocalDate dateDebut, LocalDate dateFin, LocalTime heureDebut, LocalTime heureFin) {
+        List<com.medibook.creneau.entity.Creneau> creneaux = creneauRepository.findByMedecinIdAndDateBetween(medecin.getId(), dateDebut, dateFin);
+        List<com.medibook.creneau.entity.Creneau> toUpdate = new java.util.ArrayList<>();
+
+        for (com.medibook.creneau.entity.Creneau c : creneaux) {
+            boolean matchTime = true;
+            if (heureDebut != null && heureFin != null) {
+                matchTime = c.getHeureDebut().isBefore(heureFin) && c.getHeureFin().isAfter(heureDebut);
+            }
+            if (matchTime && Boolean.TRUE.equals(c.getDisponible())) {
+                c.setDisponible(false);
+                toUpdate.add(c);
+            }
+        }
+
+        if (!toUpdate.isEmpty()) {
+            creneauRepository.saveAll(toUpdate);
+            log.info("{} créneaux rendus indisponibles suite à la création d'exception pour le médecin {}", toUpdate.size(), medecin.getEmail());
+        }
     }
 
     private LocalTime parseTime(String time) {

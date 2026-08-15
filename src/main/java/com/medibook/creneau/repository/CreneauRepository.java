@@ -35,6 +35,9 @@ public interface CreneauRepository extends JpaRepository<Creneau, Long> {
     List<Creneau> findByMedecinIdAndDateBetweenAndDisponibleTrueOrderByDateAscHeureDebutAsc(
             Long medecinId, LocalDate startDate, LocalDate endDate);
 
+    // Tous les créneaux d'un médecin sur une période
+    List<Creneau> findByMedecinIdAndDateBetween(Long medecinId, LocalDate startDate, LocalDate endDate);
+
     // Tous les créneaux d'un médecin
     List<Creneau> findByMedecinId(Long medecinId);
 }
