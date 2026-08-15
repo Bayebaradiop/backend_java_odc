@@ -13,13 +13,11 @@ import com.medibook.ExceptionsPlanning.entity.ExceptionsPlanning;
 import com.medibook.ExceptionsPlanning.repository.ExceptionsPlanningRepository;
 import com.medibook.common.enums.Role;
 import com.medibook.common.enums.Status;
-import com.medibook.creneau.dto.CreneauRequest;
 import com.medibook.creneau.dto.CreneauResponse;
 import com.medibook.creneau.entity.Creneau;
 import com.medibook.creneau.mapper.CreneauMapper;
 import com.medibook.creneau.message.MessageErreur;
 import com.medibook.creneau.repository.CreneauRepository;
-import com.medibook.user.entity.Utilisateur;
 import com.medibook.user.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;

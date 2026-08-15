@@ -1,7 +1,6 @@
 package com.medibook.user.service;
 
 import com.medibook.cabinet.entity.Cabinet;
-import com.medibook.cabinet.repository.CabinetRepository;
 import com.medibook.common.enums.Role;
 import com.medibook.common.enums.Status;
 import com.medibook.common.event.MedecinCreatedEvent;
@@ -42,7 +41,6 @@ import org.springframework.data.domain.Pageable;
 public class MedecinService {
 
     private final UserRepository userRepository;
-    private final CabinetRepository cabinetRepository;
     private final SpecialiteRepository specialiteRepository;
     private final UserMapper userMapper;
     private final MediaUploadService mediaUploadService;

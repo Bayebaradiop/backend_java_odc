@@ -10,7 +10,6 @@ import com.medibook.user.entity.Utilisateur;
 import com.medibook.user.repository.UserRepository;
 import com.medibook.user.service.MedecinService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
