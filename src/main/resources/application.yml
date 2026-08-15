@@ -14,7 +14,8 @@ spring:
       ddl-auto: update
     show-sql: true
   flyway:
-    enabled: false
+    enabled: true
+    baseline-on-migrate: true
   servlet:
     multipart:
       enabled: true
