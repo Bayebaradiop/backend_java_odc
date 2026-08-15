@@ -1,7 +1,6 @@
 package com.medibook.common.config.seeder;
 
 import com.medibook.cabinet.entity.Cabinet;
-import com.medibook.cabinet.repository.CabinetRepository;
 import com.medibook.common.enums.Role;
 import com.medibook.common.enums.StatutRdv;
 import com.medibook.creneau.entity.Creneau;
@@ -27,7 +26,6 @@ public class RendezVousSeeder implements Seeder {
 
     private final RendezVousRepository rendezVousRepository;
     private final UserRepository userRepository;
-    private final CabinetRepository cabinetRepository;
     private final CreneauRepository creneauRepository;
 
     private static final String[] MOTIFS = {
