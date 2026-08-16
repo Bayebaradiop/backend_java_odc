@@ -64,7 +64,7 @@ public class RendezVousService {
                 .medecin(creneau.getMedecin())
                 .cabinet(creneau.getMedecin().getCabinet())
                 .creneau(creneau)
-                .statut(StatutRdv.EN_ATTENTE)
+                .statut(StatutRdv.CONFIRME)
                 .motif(request.getMotif())
                 .build();
 
