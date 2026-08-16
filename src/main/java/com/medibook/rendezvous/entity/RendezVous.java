@@ -46,7 +46,7 @@ public class RendezVous {
     @Enumerated(EnumType.STRING)
     @JdbcTypeCode(SqlTypes.NAMED_ENUM)
     @Column(nullable = false, columnDefinition = "statusRdv")
-    private StatutRdv statut = StatutRdv.EN_ATTENTE;
+    private StatutRdv statut = StatutRdv.CONFIRME;
 
     private String motif;
 }

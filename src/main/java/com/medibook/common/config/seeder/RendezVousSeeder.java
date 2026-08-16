@@ -62,10 +62,9 @@ public class RendezVousSeeder implements Seeder {
     };
 
     private static final StatutRdv[] STATUTS_MIX = {
-        StatutRdv.TERMINE, StatutRdv.TERMINE, StatutRdv.TERMINE,
-        StatutRdv.CONFIRME, StatutRdv.CONFIRME, StatutRdv.CONFIRME,
-        StatutRdv.EN_ATTENTE, StatutRdv.EN_ATTENTE, StatutRdv.EN_ATTENTE, StatutRdv.EN_ATTENTE,
-        StatutRdv.ANNULE, StatutRdv.ANNULE
+        StatutRdv.TERMINE, StatutRdv.TERMINE, StatutRdv.TERMINE, StatutRdv.TERMINE,
+        StatutRdv.CONFIRME, StatutRdv.CONFIRME, StatutRdv.CONFIRME, StatutRdv.CONFIRME, StatutRdv.CONFIRME,
+        StatutRdv.ANNULE, StatutRdv.ANNULE, StatutRdv.ANNULE
     };
 
     @Override
