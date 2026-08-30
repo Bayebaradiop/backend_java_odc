@@ -48,7 +48,7 @@ springdoc:
 
 jwt:
   secret: ${JWT_SECRET:medibook-secret-key-change-in-production}
-  expiration: 86400000
+  expiration: 2592000000 # 30 jours (2 592 000 000 ms)
 
 cloudinary:
   cloud-name: ${CLOUDINARY_CLOUD_NAME:}
