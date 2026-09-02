@@ -79,8 +79,13 @@ pipeline {
                     )
                 ]) {
                     sh """
-                        echo "\$ACR_PASS" | docker login ${ACR_SERVER} -u "\$ACR_USER" --password-stdin
-                        echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin
+                        for i in 1 2 3; do
+                            echo "\$ACR_PASS" | docker login ${ACR_SERVER} -u "\$ACR_USER" --password-stdin && break || sleep 5
+                        done
+
+                        for i in 1 2 3; do
+                            echo "\$DOCKER_PASS" | docker login -u "\$DOCKER_USER" --password-stdin && break || sleep 5
+                        done
                     """
                 }
                 echo '✅ Connexion OK'
