@@ -47,40 +47,14 @@ public class UserSeeder implements Seeder {
 
     @Override
     public boolean shouldRun() {
-        // Exécuter la purge si d'autres données existent ou si le super admin est manquant
         boolean superAdminMissing = userRepository.findByEmail(SUPER_ADMIN_EMAIL).isEmpty();
-        boolean hasOtherData = userRepository.count() > (superAdminMissing ? 0 : 1)
-                || cabinetRepository.count() > 0
-                || specialiteRepository.count() > 0;
-        return superAdminMissing || hasOtherData;
+        return superAdminMissing || userRepository.count() == 0;
     }
 
     @Override
     @Transactional
     public void run() {
-        log.info("🧹 Purge complète des données de la base de données...");
-
-        try {
-            rendezVousRepository.deleteAll();
-            creneauRepository.deleteAll();
-            planningRepository.deleteAll();
-            exceptionsPlanningRepository.deleteAll();
-            
-            // Supprimer tous les utilisateurs sauf SUPER_ADMIN
-            List<Utilisateur> nonSuperAdmins = userRepository.findAll().stream()
-                    .filter(u -> u.getRole() != Role.SUPER_ADMIN)
-                    .toList();
-            if (!nonSuperAdmins.isEmpty()) {
-                userRepository.deleteAll(nonSuperAdmins);
-            }
-
-            specialiteRepository.deleteAll();
-            cabinetRepository.deleteAll();
-
-            log.info("✅ Purge terminée : Rendez-vous, Créneaux, Plannings, Spécialités, Cabinets et comptes secondaires supprimés.");
-        } catch (Exception e) {
-            log.error("⚠️ Erreur lors de la purge complète des données: {}", e.getMessage());
-        }
+        log.info("🧹 Initialisation du Super Admin...");
 
         // Créer le Super Admin s'il n'existe pas
         if (userRepository.findByEmail(SUPER_ADMIN_EMAIL).isEmpty()) {
@@ -90,6 +64,7 @@ public class UserSeeder implements Seeder {
                     .email(SUPER_ADMIN_EMAIL)
                     .telephone("+221330000000")
                     .motDePasse(passwordEncoder.encode(DEFAULT_PASSWORD))
+                    .photo("https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80")
                     .role(Role.SUPER_ADMIN)
                     .status(Status.ACTIF)
                     .build();
@@ -98,7 +73,5 @@ public class UserSeeder implements Seeder {
         } else {
             log.info("   ℹ️ Super Admin déjà présent: {}", SUPER_ADMIN_EMAIL);
         }
-
-        log.info("🎉 Base de données nettoyée avec succès - Seul le Super Admin est désormais présent !");
     }
 }
